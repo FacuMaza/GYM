@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>Lista de Extras</h2>
+    <a href="{% url 'extras_create' %}" class="btn btn-primary mb-3">Crear Nuevo Extra</a>
+
+    <table class="table">
+        <thead>
+            <tr>
+               <th>ID</th>
+                <th>Tipo</th>
+                <th>Descripción</th>
+                <th>Monto</th>
+                <th>Hora</th>
+                <th>Gimnasio</th>
+                <th>Producto</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for extra in extras_lista %}
+                <tr>
+                   <td>{{ extra.id }}</td>
+                    <td>
+                        {% if extra.ingreso %}
+                            Ingreso
+                        {% elif extra.egreso %}
+                            Egreso
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>{{ extra.descripcion }}</td>
+                    <td>{{ extra.monto }}</td>
+                     <td>{{ extra.hora }}</td>
+                     <td>{{ extra.gimnasio }}</td>
+                     <td>
+                        {% if extra.producto %}
+                            {{ extra.producto.descripcion }} 
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+              <tr>
+                <td colspan="9">No hay extras registrados.</td>
+             </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

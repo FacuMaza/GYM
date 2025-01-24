@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Socios</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .socio-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+        }
+        .socio-item .btn-group {
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Lista de Socios</h1>
+        <a href="{% url 'crear_socio' %}" class="btn btn-primary mb-3">Crear Nuevo Socio</a>
+        <div class="row">
+            {% for socio in socios %}
+                <div class="socio-item w-100">
+                    <a href="{% url 'detalle_socio' socio.pk %}" style="text-decoration:none;">
+                     {{ socio.nombre }} {{ socio.apellido }}
+                    </a>
+                    <div class="btn-group">
+                        <a href="{% url 'editar_socio' socio.pk %}" class="btn btn-sm btn-secondary">Editar</a>
+                        <button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#eliminarModal{{ socio.pk }}">Eliminar</button>
+                    </div>
+                </div>
+                
+                <!-- Modal de confirmación de eliminación -->
+                <div class="modal fade" id="eliminarModal{{ socio.pk }}" tabindex="-1" role="dialog" aria-labelledby="eliminarModalLabel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="eliminarModalLabel">Confirmar Eliminación</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">×</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                ¿Estás seguro de que quieres eliminar a {{ socio.nombre }} {{ socio.apellido }}?
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                                <form method="post" action="{% url 'eliminar_socio' socio.pk %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            {% endfor %}
+        </div>
+    </div>
+        
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
+{% endblock %}

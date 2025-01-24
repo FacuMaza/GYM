@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Listado de Ingresos Diarios</title>
+</head>
+<body>
+    <h1>Ingresos del día: {{ fecha }}</h1>
+
+    {% if ingresos %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Apellido</th>
+                    <th>DNI</th>
+                    <th>Hora de Ingreso</th>
+                    <th>Fecha de Vencimiento</th>
+                    <th>Clases Restantes</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ingreso in ingresos %}
+                    <tr>
+                        <td>{{ ingreso.socio.nombre }}</td>
+                        <td>{{ ingreso.socio.apellido }}</td>
+                        <td>{{ ingreso.socio.dni }}</td>
+                        <td>{{ ingreso.fecha_ingreso }}</td>
+                        <td>{{ ingreso.fecha_vencimiento|date:"Y-m-d"|default:"-" }}</td>
+                        <td>{{ ingreso.clases_restantes|default:"-" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No se registraron ingresos en este día.</p>
+    {% endif %}
+</body>
+</html>

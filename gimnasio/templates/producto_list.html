@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lista de Productos</title>
+    <style>
+        .card-square {
+            width: 250px;  /* Aumentado el ancho */
+            height: 250px; /* Aumentado el alto */
+            display: flex;
+            flex-direction: column;
+            text-align: center;
+            justify-content: center;
+            padding: 0.5rem;
+            border: 1px solid #ddd; /* Añadido un borde para mejor visualización */
+            border-radius: 8px; /* Bordes redondeados */
+        }
+        .card-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 0.5rem;
+        }
+        .card-text {
+            margin-bottom: 0.3rem;
+        }
+        .row-centered {
+            display: flex;
+            justify-content: center;
+            padding: 0px;
+            width: fit-content;
+            margin: 0 auto;
+        }
+        .title-centered {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .button-centered {
+            display: flex;
+            justify-content: center;
+        }
+        .button-container{
+           display: flex;
+           justify-content: space-around;
+           padding-top: 0.5rem;
+        }
+         /* Estilos para mejor visualización en pantallas más grandes */
+        @media (min-width: 768px) {
+            .row-cols-md-2 {
+                display: flex;
+                flex-wrap: wrap; /* Permite que las tarjetas se envuelvan en pantallas medianas */
+            }
+            .col {
+              flex-basis: 50%; /* Cada columna ocupa la mitad del ancho */
+              padding: 0.5rem;
+              box-sizing: border-box;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1 class="title-centered">Productos Disponibles</h1>
+
+    <div class="row row-cols-1 row-cols-md-2 gx-0 row-centered">
+        {% for producto in productos %}
+            <div class="col d-flex justify-content-center py-1">
+                <div class="card card-square">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ producto.descripcion }}</h5>
+                        <p class="card-text">
+                            <strong>Cantidad:</strong> {{ producto.cantidad }}<br>
+                            <strong>Precio:</strong> ${{ producto.precio }}<br>
+                            <strong>Gimnasio:</strong> {{ producto.gimnasio }}
+                        </p>
+                        <div class="button-container">
+                            <a href="{% url 'producto_editar' producto.id %}" class="btn btn-primary mt-auto">Modificar</a>
+                            <a href="{% url 'producto_eliminar' producto.id %}" class="btn btn-danger mt-auto" onclick="return confirm('¿Estás seguro de eliminar este producto?')">Eliminar</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <p>No hay productos disponibles.</p>
+        {% endfor %}
+    </div>
+
+    <div class="button-centered">
+        <a href="{% url 'producto_crear' %}" class="btn btn-success mt-3">Agregar Producto</a>
+    </div>
+</body>
+</html>
+{% endblock %}

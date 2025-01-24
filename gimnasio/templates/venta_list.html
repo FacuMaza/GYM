@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block content %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lista de Ventas</title>
+</head>
+<body>
+    <h1>Lista de Ventas</h1>
+    <a href="{% url 'venta_crear' %}">Crear Nueva Venta</a>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Usuario</th>
+                <th>Cantidad</th>
+                 <th>Gimnasio</th>
+                <th>Efectivo</th>
+                <th>Transferencia</th>
+                <th>Tarjeta Crédito</th>
+                <!--<th>Acciones</th>-->
+            </tr>
+        </thead>
+        <tbody>
+            {% for venta in ventas %}
+                <tr>
+                    <td>{{ venta.producto.descripcion }}</td>
+                    <td>{{ venta.usuario }}</td>
+                    <td>{{ venta.cantidad }}</td>
+                      <td>{{ venta.gimnasio }}</td>
+                    <td>{{ venta.efectivo|default_if_none:"" }}</td>
+                    <td>{{ venta.transferencia|default_if_none:"" }}</td>
+                    <td>{{ venta.tarjeta_credito|default_if_none:"" }}</td>
+                    
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
+{% endblock %}

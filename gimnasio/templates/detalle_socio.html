@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Detalles del Socio</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Detalles del Socio</h1>
+        <h2>{{ socio.nombre }} {{ socio.apellido }}</h2>
+        <p><strong>Nombre:</strong> {{ socio.nombre }}</p>
+        <p><strong>Apellido:</strong> {{ socio.apellido }}</p>
+        <p><strong>Dni:</strong> {{ socio.dni }}</p>
+        <p><strong>Gimnasio:</strong> {{ socio.gimnasio }}</p>
+        {% if ultima_cuota %}
+          <p><strong>Última Cuota:</strong> {{ ultima_cuota.tipo_mensualidad }}</p>
+        {% else %}
+         <p><strong>No tiene cuotas registradas</strong></p>
+        {% endif %}
+        <p>
+            <a href="{% url 'editar_socio' socio.pk %}" class="btn btn-sm btn-warning">Editar</a>
+           <a href="{% url 'eliminar_socio' socio.pk %}" class="btn btn-sm btn-danger">Eliminar</a>
+        </p>
+         <a href="{% url 'lista_socios' %}" class="btn btn-secondary">Volver a la lista</a>
+    </div>
+</body>
+</html>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Tipos de Usuario</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Lista de Tipos de Usuario</h1>
+        <a href="{% url 'tipo_usuario_create' %}" class="btn btn-primary mb-3">Crear Nuevo Tipo de Usuario</a>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Tipo de Usuario</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tipo_usuario in tipos_usuario %}
+                    <tr>
+                        <td>{{ tipo_usuario.tipousuario }}</td>
+                        <td>
+                            <a href="{% url 'tipo_usuario_update' tipo_usuario.pk %}" class="btn btn-sm btn-secondary">Editar</a>
+                            <a href="{% url 'tipo_usuario_delete' tipo_usuario.pk %}" class="btn btn-sm btn-danger">Eliminar</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
+{% endblock %}

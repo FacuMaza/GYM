@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Crear Socio</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <h2>Crear Socio</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}  {# Renderiza el formulario como párrafos, incluyendo el nuevo campo #}
+        <button type="submit">Guardar</button>
+    </form>
+    {% if form.errors %}
+    <ul class="errorlist">
+    {% for field in form %}
+      {% if field.errors %}
+        {% for error in field.errors %}
+            <li>{{ error }}</li>
+        {% endfor %}
+      {% endif %}
+    {% endfor %}
+     {% for error in form.non_field_errors %}
+      <li>{{ error }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</body>
+</html>

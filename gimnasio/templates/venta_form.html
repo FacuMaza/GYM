@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Crear/Editar Venta</title>
+    <style>
+        .form-container {
+            width: 40%;
+            margin: 30px auto;
+            padding: 10px 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .form-container h1 {
+            margin-bottom: 15px;
+        }
+
+        .form-container form {
+            display: inline-block;
+            text-align: left;
+            width: 100%;
+        }
+
+         .form-container label {
+            display: block;
+            margin-bottom: 3px;
+         }
+
+        .form-container input,
+        .form-container select {
+             width: 90%;
+             padding: 6px;
+             margin-bottom: 8px;
+             border: 1px solid #ddd;
+             border-radius: 4px;
+         }
+
+         .form-container button {
+            padding: 8px 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 8px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            }
+
+         .form-container a {
+             margin-top: 15px;
+             display: block;
+         }
+
+    </style>
+</head>
+<body>
+    <div class="form-container">
+    
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Guardar</button>
+        </form>
+      <a href="{% url 'venta_list' %}">Volver a la lista de ventas</a>
+    </div>
+    <script>
+         document.addEventListener('DOMContentLoaded', function() {
+             const cantidadInput = document.getElementById('id_cantidad');
+             const productoSelect = document.getElementById('id_producto');
+             const totalInput = document.getElementById('id_total');
+
+             function calcularTotal() {
+                 const cantidad = parseFloat(cantidadInput.value) || 0;
+                 const productoId = productoSelect.value;
+
+                 if (productoId && cantidad) {
+                     fetch(`/producto_precio/${productoId}`)
+                         .then(response => response.json())
+                         .then(data => {
+                         const precio = parseFloat(data.precio);
+                         const total = cantidad * precio;
+                         totalInput.value = total.toFixed(2);
+                     })
+                 .catch(error => console.error('Error fetching precio:', error));
+                 } else {
+                     totalInput.value = '0.00';
+                 }
+             }
+
+             cantidadInput.addEventListener('input', calcularTotal);
+             productoSelect.addEventListener('change', calcularTotal);
+             calcularTotal();
+         });
+     </script>
+</body>
+</html>
+{% endblock %}

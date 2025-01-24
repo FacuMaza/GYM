@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h2>Lista de Cuotas</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Socio</th>
+                <th>Tipo Mensualidad</th>
+                <th>Fecha Inicio</th>
+                <th>Fecha Vencimiento</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in cuotas_por_socio %}
+               <tr>
+                    <td>{{ item.socio.nombre }} {{ item.socio.apellido }}</td>
+                    <td>
+                      {% if item.socio.tipo_mensualidad %}
+                        {{ item.socio.tipo_mensualidad.tipo }} 
+                      {% else %}
+                        No asignada
+                      {% endif %}
+                    </td>
+                     {% if item.cuota %}
+                        
+                        <td>{{ item.cuota.fecha_inicio }}</td>
+                        <td>{{ item.fecha_vencimiento }}</td>
+                        <td>
+                            <a href="{% url 'renovar_mensualidad' %}?socio={{ item.socio.id }}&cuota={{ item.cuota.id }}" class="btn btn-primary">Renovar</a>
+                        </td>
+                    {% else %}
+                        
+                        <td>No asignada</td>
+                        <td>No asignada</td>
+                        <td>
+                            <a href="{% url 'asignar_mensualidad' %}?socio={{ item.socio.id }}" class="btn btn-success">Asignar</a>
+                        </td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

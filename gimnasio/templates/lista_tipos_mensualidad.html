@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Tipos de Mensualidad</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Lista de Tipos de Mensualidad</h1>
+        <a href="{% url 'crear_tipo_mensualidad' %}" class="btn btn-primary mb-3">Crear Nuevo Tipo</a>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Tipo</th>
+                    <th>Precio</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tipo in tipos %}
+                    <tr>
+                        <td>{{ tipo.tipo }}</td>
+                        <td>{{ tipo.precio }}</td>
+                        <td>
+                            <a href="{% url 'editar_tipo_mensualidad' tipo.pk %}" class="btn btn-sm btn-warning">Editar</a>
+                            <a href="{% url 'eliminar_tipo_mensualidad' tipo.pk %}" class="btn btn-sm btn-danger">Eliminar</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
