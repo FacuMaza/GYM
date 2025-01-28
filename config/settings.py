@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'gimnasio',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -75,10 +76,12 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+import os
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'box.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'box.sqlite3'),
     }
 }
 
@@ -102,6 +105,14 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+
+STATICFILES_DIRS = [
+   os.path.join(BASE_DIR, 'gimnasio/static'),
+   
+   ]
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
@@ -119,6 +130,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+
+
+
 LOGOUT_REDIRECT_URL = '/'
 LOGIN_URL = '/login/'
 

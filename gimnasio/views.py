@@ -764,3 +764,26 @@ def listado_ingresos_diarios(request):
 
         context = {'ingresos': ingresos_con_socio, 'fecha': fecha}
         return render(request, 'listado_ingresos.html', context)
+
+
+
+##vistas para cartel 
+
+def api_socios(request):
+    socios = Socio.objects.all()
+    data = []
+    for socio in socios:
+      tipo_mensualidad = None
+      if socio.tipo_mensualidad:
+        tipo_mensualidad = {'tipo': socio.tipo_mensualidad.tipo}
+      data.append({
+          'id': socio.id,
+          'dni': socio.dni,
+          'nombre': socio.nombre,
+          'apellido': socio.apellido,
+          'tipo_mensualidad': tipo_mensualidad,
+          'clases_restantes': socio.clases_restantes,
+          'telefono': socio.telefono,
+          'email': socio.email
+      })
+    return JsonResponse(data, safe=False)

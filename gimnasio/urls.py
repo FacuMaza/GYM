@@ -110,3 +110,11 @@ urlpatterns += [
 urlpatterns += [
     path('listado-ingresos/', views.listado_ingresos_diarios, name='listado_ingresos'),
 ]
+
+
+##api socios
+
+
+urlpatterns += [
+    path('api/socios/', views.api_socios, name='api_socios'),
+]
