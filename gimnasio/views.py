@@ -783,7 +783,6 @@ def api_socios(request):
           'apellido': socio.apellido,
           'tipo_mensualidad': tipo_mensualidad,
           'clases_restantes': socio.clases_restantes,
-          'telefono': socio.telefono,
-          'email': socio.email
+          'fecha_vencimiento' : socio.fecha_vencimiento
       })
     return JsonResponse(data, safe=False)
