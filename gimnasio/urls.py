@@ -117,4 +117,5 @@ urlpatterns += [
 
 urlpatterns += [
     path('api/socios/', views.api_socios, name='api_socios'),
+    path('api/socios/<int:socio_id>/', views.api_socios, name='api_socios_detail'),
 ]

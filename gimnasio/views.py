@@ -10,6 +10,8 @@ from django.http import JsonResponse
 from django.contrib import messages
 from django.db import transaction
 from django.db.models import F
+import json
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.cache import never_cache
 from .models import *
 from .forms import *
@@ -346,7 +348,13 @@ def asignar_mensualidad(request):
             tipo_mensualidad = form.cleaned_data['tipo_mensualidad']
             metodo_pago = form.cleaned_data['metodo_pago']
             monto = form.cleaned_data['monto']
+            clases_restantes = form.cleaned_data.get('clases_restantes') # Obtener clases restantes
             
+            #Actualizar clases restantes
+            if clases_restantes is not None:
+                socio.clases_restantes = clases_restantes
+                socio.save() #guardar los cambios en el socio
+
              #Obtenemos la ultima cuota
             try:
               cuota_anterior = Cuota.objects.filter(socio=socio).latest('fecha_inicio')
@@ -390,7 +398,6 @@ def asignar_mensualidad(request):
         
 
     return render(request, 'asignar_mensualidad.html', {'form': form, 'socio_id': socio_id})
-
 
 
 
@@ -769,20 +776,51 @@ def listado_ingresos_diarios(request):
 
 ##vistas para cartel 
 
-def api_socios(request):
-    socios = Socio.objects.all()
-    data = []
-    for socio in socios:
-      tipo_mensualidad = None
-      if socio.tipo_mensualidad:
-        tipo_mensualidad = {'tipo': socio.tipo_mensualidad.tipo}
-      data.append({
-          'id': socio.id,
-          'dni': socio.dni,
-          'nombre': socio.nombre,
-          'apellido': socio.apellido,
-          'tipo_mensualidad': tipo_mensualidad,
-          'clases_restantes': socio.clases_restantes,
-          'fecha_vencimiento' : socio.fecha_vencimiento
-      })
-    return JsonResponse(data, safe=False)
+@csrf_exempt
+def api_socios(request, socio_id=None):
+    if request.method == 'GET':
+        socios = Socio.objects.all()
+        data = []
+        for socio in socios:
+            tipo_mensualidad = None
+            if socio.tipo_mensualidad:
+                tipo_mensualidad = {'tipo': socio.tipo_mensualidad.tipo}
+            data.append({
+                'id': socio.id,
+                'dni': socio.dni,
+                'nombre': socio.nombre,
+                'apellido': socio.apellido,
+                'tipo_mensualidad': tipo_mensualidad,
+                'clases_restantes': socio.clases_restantes,
+                'fecha_vencimiento' : socio.fecha_vencimiento
+            })
+        return JsonResponse(data, safe=False)
+    elif request.method == 'PATCH':
+        try:
+            if socio_id is not None:
+                  socio = get_object_or_404(Socio, pk=socio_id)
+                  data = json.loads(request.body)
+                  clases_restantes = data.get('clases_restantes')
+                  if clases_restantes is not None:
+                     socio.clases_restantes = clases_restantes
+                     socio.save()
+                     tipo_mensualidad = None
+                     if socio.tipo_mensualidad:
+                          tipo_mensualidad = {'tipo': socio.tipo_mensualidad.tipo}
+                     response_data = {
+                         'id': socio.id,
+                         'dni': socio.dni,
+                         'nombre': socio.nombre,
+                         'apellido': socio.apellido,
+                         'tipo_mensualidad': tipo_mensualidad,
+                         'clases_restantes': socio.clases_restantes,
+                         'fecha_vencimiento': socio.fecha_vencimiento
+                    }
+                     return JsonResponse(response_data, status=200)
+                  else:
+                       return JsonResponse({'error': 'clases_restantes es un campo requerido'}, status=400)
+            else:
+                   return JsonResponse({'error': 'id es un campo requerido'}, status=400)
+        except json.JSONDecodeError:
+             return JsonResponse({'error': 'JSON invalido'}, status=400)
+    return JsonResponse({'error': 'Metodo no permitido'}, status=405)

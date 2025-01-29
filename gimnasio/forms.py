@@ -62,6 +62,8 @@ class TipoMensualidadForm(forms.ModelForm):
             'precio': forms.NumberInput(attrs={'class': 'form-control'})
         }
 
+from django import forms
+from .models import Socio, TipoMensualidad
 
 class AsignarMensualidadForm(forms.Form):
     socio = forms.ModelChoiceField(queryset=Socio.objects.all(), label="Socio", widget=forms.TextInput(attrs={'readonly':'readonly'}))
@@ -73,22 +75,25 @@ class AsignarMensualidadForm(forms.Form):
         ('tarjeta_credito', 'Tarjeta de Crédito')
     ], label="Método de Pago")
     monto = forms.FloatField(label="Monto Recibido")
+    clases_restantes = forms.IntegerField(label="Clases Restantes", required=False, widget=forms.NumberInput()) # Nuevo campo
 
     def clean(self):
         cleaned_data = super().clean()
         tipo_mensualidad = cleaned_data.get('tipo_mensualidad')
+        socio = cleaned_data.get('socio')
         
         if tipo_mensualidad:
-           
-          return cleaned_data
+            # Si se selecciona una nueva mensualidad, el campo clases restantes no es relevante
+            self.fields['clases_restantes'].required = False
         else:
-          # Si no hay una nueva mensualidad seleccionada, usa la existente del socio
-            socio = cleaned_data.get('socio')
+            # Si no hay una nueva mensualidad seleccionada, usamos la existente del socio
             if socio and socio.tipo_mensualidad:
-              cleaned_data['tipo_mensualidad'] = socio.tipo_mensualidad
-              return cleaned_data
+                cleaned_data['tipo_mensualidad'] = socio.tipo_mensualidad
+                self.fields['clases_restantes'].required = True #Hacerlo requerido
+                return cleaned_data
             else:
-              self.add_error('tipo_mensualidad', 'Debe Seleccionar una Mensualidad.')
+                self.add_error('tipo_mensualidad', 'Debe Seleccionar una Mensualidad.')
+
         return cleaned_data
 
 class SeleccionarFechaRenovacionForm(forms.Form):
