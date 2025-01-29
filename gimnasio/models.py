@@ -188,8 +188,11 @@ class RegistroIngreso(models.Model):
     fecha_ingreso = models.DateTimeField(auto_now_add=True)
     dni_socio = models.CharField(max_length=20)
     clases_restantes_al_ingresar = models.PositiveIntegerField(null=True, blank=True)
+    nombre_socio = models.CharField(max_length=100, null=True, blank=True) # Nuevo campo
+    apellido_socio = models.CharField(max_length=100, null=True, blank=True) # Nuevo campo
+
     def __str__(self):
-        return '%s %s' % (self.fecha_ingreso, self.dni_socio)
+        return f"Ingreso de {self.nombre_socio} {self.apellido_socio} el {self.fecha_ingreso}"
 
     class Meta:
         db_table = 'Registro Ingresos'
