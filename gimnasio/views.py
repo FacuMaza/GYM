@@ -10,6 +10,8 @@ from django.http import JsonResponse
 from django.contrib import messages
 from django.db import transaction
 from django.db.models import F
+import json
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.cache import never_cache
 from .models import *
 from .forms import *
@@ -346,7 +348,13 @@ def asignar_mensualidad(request):
             tipo_mensualidad = form.cleaned_data['tipo_mensualidad']
             metodo_pago = form.cleaned_data['metodo_pago']
             monto = form.cleaned_data['monto']
+            clases_restantes = form.cleaned_data.get('clases_restantes') # Obtener clases restantes
             
+            #Actualizar clases restantes
+            if clases_restantes is not None:
+                socio.clases_restantes = clases_restantes
+                socio.save() #guardar los cambios en el socio
+
              #Obtenemos la ultima cuota
             try:
               cuota_anterior = Cuota.objects.filter(socio=socio).latest('fecha_inicio')
@@ -390,7 +398,6 @@ def asignar_mensualidad(request):
         
 
     return render(request, 'asignar_mensualidad.html', {'form': form, 'socio_id': socio_id})
-
 
 
 
@@ -733,56 +740,129 @@ def historial_balances(request):
 
 
 ##lista de ingresos
+
 def listado_ingresos_diarios(request):
-        fecha = request.GET.get('fecha', date.today().isoformat())
-        registros_ingreso = RegistroIngreso.objects.filter(fecha_ingreso__date=fecha)
-        ingresos_con_socio = []
+    fecha = request.GET.get('fecha', date.today().isoformat())
+    registros_ingreso = RegistroIngreso.objects.filter(fecha_ingreso__date=fecha).order_by('-fecha_ingreso')
+    ingresos_con_socio = []
 
-        for registro in registros_ingreso:
+    for registro in registros_ingreso:
+        try:
+            socio = Socio.objects.get(dni=registro.dni_socio)
             try:
-                socio = Socio.objects.get(dni=registro.dni_socio)
+                ultima_cuota = Cuota.objects.filter(socio=socio).latest('fecha_inicio')
+                fecha_vencimiento = ultima_cuota.fecha_inicio + timedelta(days=30)
+            except Cuota.DoesNotExist:
+                fecha_vencimiento = None
+            
+            ingresos_con_socio.append({
+                'nombre': registro.nombre_socio,
+                'apellido': registro.apellido_socio,
+                'dni': registro.dni_socio, # DNI agregado aquí
+                'fecha_ingreso': registro.fecha_ingreso,
+                'fecha_vencimiento': fecha_vencimiento,
+                'clases_restantes': registro.clases_restantes_al_ingresar, #Obtenemos las clases restantes del registro.
+                'tipo_mensualidad': socio.tipo_mensualidad.tipo if socio.tipo_mensualidad else 'Sin mensualidad',
+            })
+            print(f"Clases restantes de {registro.nombre_socio} {registro.apellido_socio}: {registro.clases_restantes_al_ingresar}")
+        except Socio.DoesNotExist:
+            ingresos_con_socio.append({
+                'nombre': registro.nombre_socio,
+                'apellido': registro.apellido_socio,
+                'dni': registro.dni_socio,
+                'fecha_ingreso': registro.fecha_ingreso,
+                'fecha_vencimiento': None,
+                'clases_restantes': registro.clases_restantes_al_ingresar,
+                 'tipo_mensualidad': 'Socio no encontrado',
+                
+            })
+            print(f"Socio no encontrado con DNI: {registro.dni_socio}")
+        except Exception as e:
+             ingresos_con_socio.append({
+                'nombre': registro.nombre_socio,
+                'apellido': registro.apellido_socio,
+                'dni': registro.dni_socio,
+                'fecha_ingreso': registro.fecha_ingreso,
+                'fecha_vencimiento': None,
+                'clases_restantes': registro.clases_restantes_al_ingresar,
+                 'tipo_mensualidad': 'Error al obtener mensualidad',
+             })
+             print(f"Error al procesar registro de ingreso: {e}")
 
-                try:
-                    ultima_cuota = Cuota.objects.filter(socio=socio).latest('fecha_inicio')
-                    fecha_vencimiento = ultima_cuota.fecha_inicio + timedelta(days=30)
-                except Cuota.DoesNotExist:
-                    fecha_vencimiento = None
-
-                # Cálculo de clases restantes (con manejo de valores negativos)
-                clases_restantes = max(0, socio.clases_restantes)
-                    
-
-                ingresos_con_socio.append({
-                    'socio': socio,
-                    'fecha_ingreso': registro.fecha_ingreso,
-                    'fecha_vencimiento': fecha_vencimiento,
-                    'clases_restantes': clases_restantes,
-                })
-                print(f"Clases restantes de {socio.nombre} {socio.apellido}: {clases_restantes}")
-            except Socio.DoesNotExist:
-                print(f"Socio no encontrado con DNI: {registro.dni_socio}")
-
-        context = {'ingresos': ingresos_con_socio, 'fecha': fecha}
-        return render(request, 'listado_ingresos.html', context)
-
-
-
-##vistas para cartel 
-
-def api_socios(request):
-    socios = Socio.objects.all()
-    data = []
-    for socio in socios:
-      tipo_mensualidad = None
-      if socio.tipo_mensualidad:
-        tipo_mensualidad = {'tipo': socio.tipo_mensualidad.tipo}
-      data.append({
-          'id': socio.id,
-          'dni': socio.dni,
-          'nombre': socio.nombre,
-          'apellido': socio.apellido,
-          'tipo_mensualidad': tipo_mensualidad,
-          'clases_restantes': socio.clases_restantes,
-          'fecha_vencimiento' : socio.fecha_vencimiento
-      })
-    return JsonResponse(data, safe=False)
+    context = {'ingresos': ingresos_con_socio, 'fecha': fecha}
+    return render(request, 'listado_ingresos.html', context)
+    
+@csrf_exempt
+def api_socios(request, socio_id=None):
+    if request.method == 'GET':
+        socios = Socio.objects.all()
+        data = []
+        for socio in socios:
+            tipo_mensualidad = None
+            if socio.tipo_mensualidad:
+                tipo_mensualidad = {'tipo': socio.tipo_mensualidad.tipo}
+            data.append({
+                'id': socio.id,
+                'dni': socio.dni,
+                'nombre': socio.nombre,
+                'apellido': socio.apellido,
+                'tipo_mensualidad': tipo_mensualidad,
+                'clases_restantes': socio.clases_restantes,
+                'fecha_vencimiento' : socio.fecha_vencimiento
+            })
+        return JsonResponse(data, safe=False)
+    elif request.method == 'PATCH':
+        try:
+            if socio_id is not None:
+                  socio = get_object_or_404(Socio, pk=socio_id)
+                  data = json.loads(request.body)
+                  clases_restantes = data.get('clases_restantes')
+                  if clases_restantes is not None:
+                     socio.clases_restantes = clases_restantes
+                     socio.save()
+                     tipo_mensualidad = None
+                     if socio.tipo_mensualidad:
+                          tipo_mensualidad = {'tipo': socio.tipo_mensualidad.tipo}
+                     response_data = {
+                         'id': socio.id,
+                         'dni': socio.dni,
+                         'nombre': socio.nombre,
+                         'apellido': socio.apellido,
+                         'tipo_mensualidad': tipo_mensualidad,
+                         'clases_restantes': socio.clases_restantes,
+                         'fecha_vencimiento': socio.fecha_vencimiento
+                    }
+                     return JsonResponse(response_data, status=200)
+                  else:
+                       return JsonResponse({'error': 'clases_restantes es un campo requerido'}, status=400)
+            else:
+                   return JsonResponse({'error': 'id es un campo requerido'}, status=400)
+        except json.JSONDecodeError:
+             return JsonResponse({'error': 'JSON invalido'}, status=400)
+        return JsonResponse({'error': 'Metodo no permitido'}, status=405)
+   
+@csrf_exempt
+def registrar_ingreso(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            dni_socio = data.get('dni_socio')
+            fecha_ingreso = data.get('fecha_ingreso')
+            clases_restantes_al_ingresar = data.get('clases_restantes_al_ingresar')
+            nombre_socio = data.get('nombre_socio')
+            apellido_socio = data.get('apellido_socio')
+            
+            if dni_socio and fecha_ingreso and clases_restantes_al_ingresar is not None and nombre_socio and apellido_socio :
+              
+                RegistroIngreso.objects.create(dni_socio=dni_socio, 
+                                              fecha_ingreso=fecha_ingreso,
+                                              clases_restantes_al_ingresar=clases_restantes_al_ingresar,
+                                              nombre_socio=nombre_socio,
+                                              apellido_socio=apellido_socio
+                                              )
+                return JsonResponse({'message': 'Ingreso registrado correctamente'}, status=201)
+            else:
+                 return JsonResponse({'error': 'dni_socio, fecha_ingreso, clases_restantes_al_ingresar, nombre_socio y apellido_socio son requeridos'}, status=400)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'JSON invalido'}, status=400)
+    return JsonResponse({'error': 'Metodo no permitido'}, status=405)

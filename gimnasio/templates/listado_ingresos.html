@@ -16,17 +16,19 @@
                     <th>Hora de Ingreso</th>
                     <th>Fecha de Vencimiento</th>
                     <th>Clases Restantes</th>
+                    <th>Tipo de Mensualidad</th>
                 </tr>
             </thead>
             <tbody>
                 {% for ingreso in ingresos %}
                     <tr>
-                        <td>{{ ingreso.socio.nombre }}</td>
-                        <td>{{ ingreso.socio.apellido }}</td>
-                        <td>{{ ingreso.socio.dni }}</td>
+                        <td>{{ ingreso.nombre }}</td>
+                        <td>{{ ingreso.apellido }}</td>
+                        <td>{{ ingreso.dni }}</td>
                         <td>{{ ingreso.fecha_ingreso }}</td>
                         <td>{{ ingreso.fecha_vencimiento|date:"Y-m-d"|default:"-" }}</td>
                         <td>{{ ingreso.clases_restantes|default:"-" }}</td>
+                        <td>{{ ingreso.tipo_mensualidad }}</td>
                     </tr>
                 {% endfor %}
             </tbody>

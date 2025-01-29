@@ -109,6 +109,7 @@ urlpatterns += [
 
 urlpatterns += [
     path('listado-ingresos/', views.listado_ingresos_diarios, name='listado_ingresos'),
+    path('api/registrar-ingreso/', views.registrar_ingreso, name='registrar_ingreso'),
 ]
 
 
@@ -117,4 +118,5 @@ urlpatterns += [
 
 urlpatterns += [
     path('api/socios/', views.api_socios, name='api_socios'),
+    path('api/socios/<int:socio_id>/', views.api_socios, name='api_socios_detail'),
 ]
