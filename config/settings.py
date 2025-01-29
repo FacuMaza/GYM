@@ -1,3 +1,4 @@
+
 """
 Django settings for config project.
 
@@ -113,9 +114,9 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 STATICFILES_DIRS = [
-   os.path.join(BASE_DIR, 'gimnasio/static'),
+                        os.path.join(BASE_DIR, 'gimnasio/static'),
    
-   ]
+]
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
@@ -150,6 +151,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 SESSION_COOKIE_AGE = 1200  # 20 minutos por ejemplo
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-
 
 
