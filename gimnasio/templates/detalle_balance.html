@@ -1,0 +1,38 @@
+<!-- templates/balance/detalle_balance.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Detalle del Balance</title>
+</head>
+<body>
+    <h2>Detalle del Balance del {{ balance.fecha }} para {{ balance.gimnasio.direccion }}</h2>
+    <p>Total Ingresos: {{ balance.total_ingresos|default:"0" }}</p>
+    <p>Total Egresos: {{ balance.total_egresos|default:"0" }}</p>
+    <p>Balance: {{ balance.balance|default:"0" }}</p>
+
+    <h3>Ingresos:</h3>
+    {% if ingresos %}
+    <ul>
+        {% for ingreso in ingresos %}
+            <li>{{ ingreso.concepto }}: ${{ ingreso.monto }}</li>
+        {% endfor %}
+    </ul>
+    {% else %}
+        <p>No hay ingresos registrados para este día.</p>
+    {% endif %}
+
+    <h3>Egresos:</h3>
+        {% if egresos %}
+    <ul>
+        {% for egreso in egresos %}
+            <li>{{ egreso.concepto }}: ${{ egreso.monto }}</li>
+        {% endfor %}
+        </ul>
+        {% else %}
+        <p>No hay egresos registrados para este día.</p>
+    {% endif %}
+
+    <a href="{% url 'historial_balances' %}">Volver al Historial</a>
+</body>
+</html>

@@ -7,29 +7,30 @@
 </head>
 <body>
     <h2>Historial de Balances Diarios</h2>
-    {% if balances %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Gimnasio</th>
-                    <th>Fecha</th>
-                    <th>Total Ingresos</th>
-                    <th>Total Egresos</th>
-                    <th>Balance</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for balance in balances %}
-                    <tr>
-                        <td>{{ balance.gimnasio.direccion }}</td>
-                        <td>{{ balance.fecha }}</td>
-                        <td>{{ balance.total_ingresos|default:"0"}}</td>
-                        <td>{{ balance.total_egresos|default:"0"}}</td>
-                        <td>{{ balance.balance|default:"0"}}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    {% if all_gimnasios %}
+      {% for gimnasio in all_gimnasios %}
+        <h3>{{ gimnasio.direccion }}</h3>
+        {% if gimnasio in gimnasios_con_historial %}
+             {% for key, balances in grouped_balances.items %}
+                  {% with gimnasio_direccion=key.0 year=key.1 month=key.2 %}
+                      {% if gimnasio_direccion == gimnasio.direccion %}
+                         <ul>
+                            {% for balance in balances %}
+                                <li>
+                                    {{ month }}/{{ year }}
+                                    <a href="{% url 'detalle_balance' balance_id=balance.id %}">
+                                      <button>Ver Detalle</button>
+                                    </a>
+                                </li>
+                           {% endfor %}
+                      </ul>
+                   {% endif %}
+                  {% endwith %}
+              {% endfor %}
+        {% else %}
+        <p>No hay historial para este gimnasio.</p>
+      {% endif %}
+     {% endfor %}   
     {% else %}
         <p>No hay balances guardados todavía.</p>
     {% endif %}

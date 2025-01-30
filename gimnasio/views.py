@@ -698,7 +698,7 @@ def balance_diario(request):
         form = SeleccionGimnasioForm(request.POST)
         if form.is_valid():
             gimnasio_seleccionado = form.cleaned_data['gimnasio']
-            return redirect('mostrar_balance', gimnasio_id=gimnasio_seleccionado.id) 
+            return redirect('mostrar_balance', gimnasio_id=gimnasio_seleccionado.id)
     else:
         form = SeleccionGimnasioForm()
     return render(request, 'seleccionar_gimnasio.html', {'form': form})
@@ -713,8 +713,30 @@ def mostrar_balance(request, gimnasio_id):
         total_ingresos = sum(ingreso.monto for ingreso in ingresos_hoy if ingreso.monto)
         total_egresos = sum(egreso.monto for egreso in egresos_hoy if egreso.monto)
         balance = total_ingresos - total_egresos
-        gimnasio_nombre = ingresos_hoy.first().gimnasio.direccion if ingresos_hoy else egresos_hoy.first().gimnasio.direccion if egresos_hoy else None
         
+        # Obtener el gimnasio directamente desde el ID
+        try:
+             gimnasio_seleccionado = Gimnasio.objects.get(id=gimnasio_id)
+             gimnasio_nombre = gimnasio_seleccionado.direccion
+        except Gimnasio.DoesNotExist:
+             gimnasio_seleccionado = None
+             gimnasio_nombre = None
+        
+        # Guardar el balance diario (con `get_or_create` y manejo de update)
+        if gimnasio_seleccionado:
+            balance_diario, created = BalanceDiario.objects.get_or_create(
+                gimnasio=gimnasio_seleccionado,
+                fecha=hoy,
+                defaults={'total_ingresos': total_ingresos,
+                          'total_egresos': total_egresos,
+                          'balance': balance}
+            )
+            if not created:
+                balance_diario.total_ingresos = total_ingresos
+                balance_diario.total_egresos = total_egresos
+                balance_diario.balance = balance
+                balance_diario.save()
+
         context = {
             'gimnasio_id': gimnasio_id,
             'gimnasio_nombre': gimnasio_nombre,
@@ -731,10 +753,42 @@ def mostrar_balance(request, gimnasio_id):
         return render(request, 'error.html',{'error':e})
 
 
-
 def historial_balances(request):
-     balances = BalanceDiario.objects.all()
-     return render(request, 'historial_balances.html', {'balances': balances})
+    balances = BalanceDiario.objects.all().order_by('-fecha')
+    
+    # Agrupar balances por gimnasio, mes y año
+    grouped_balances = {}
+    for balance in balances:
+        key = (balance.gimnasio.direccion, balance.fecha.year, balance.fecha.month)
+        if key not in grouped_balances:
+            grouped_balances[key] = []
+        grouped_balances[key].append(balance)
+
+    gimnasios_con_historial = [balance.gimnasio for balance in balances]
+    
+    
+    all_gimnasios = Gimnasio.objects.all()
+    context = {
+        'grouped_balances': grouped_balances,
+        'gimnasios_con_historial': gimnasios_con_historial,
+        'all_gimnasios' : all_gimnasios,
+    }
+
+    return render(request, 'historial_balances.html', context)
+
+
+def detalle_balance(request, balance_id):
+    balance = get_object_or_404(BalanceDiario, id=balance_id)
+    
+    ingresos_hoy = ingresos.objects.filter(gimnasio=balance.gimnasio, fecha=balance.fecha)
+    egresos_hoy = egreso.objects.filter(gimnasio=balance.gimnasio, fecha=balance.fecha)
+    
+    context = {
+        'balance': balance,
+        'ingresos': ingresos_hoy,
+        'egresos': egresos_hoy,
+    }
+    return render(request, 'detalle_balance.html', context)
 
 
 

@@ -102,6 +102,7 @@ urlpatterns += [
     path('balance/', views.balance_diario, name='balance_diario'),
     path('balance/<int:gimnasio_id>/', views.mostrar_balance, name='mostrar_balance'),
     path('historial/', views.historial_balances, name='historial_balances'),
+    path('detalle_balance/<int:balance_id>/', views.detalle_balance, name='detalle_balance'),
 ]
 
 
