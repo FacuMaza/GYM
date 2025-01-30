@@ -1,19 +1,69 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <title>Editar Socio</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+      .center-container {
+         display: flex;
+         justify-content: center;
+         align-items: center;
+         min-height: 60vh;
+      }
+      .card {
+        width: 80%;
+        max-width: 800px;
+        display: flex;
+        flex-direction: column;
+      }
+       .card-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 2rem;
+    }
+      .button-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+    }
+      .spaced-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+         margin-top: 1rem;
+        margin-bottom: 0.5rem;
+      }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Editar Socio</h1>
-        <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-             <a href="{% url 'lista_socios' %}" class="btn btn-secondary">Cancelar</a>
-        </form>
+    <div class="center-container">
+        <div class="card">
+            <div class="card-body">
+               <h2 class="card-title">Editar Socio</h2>
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                   <div class="spaced-buttons">
+                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                        <a href="{% url 'lista_socios' %}" class="btn btn-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
+   <div class="button-container">
+      
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
+{% endblock %}

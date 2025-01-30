@@ -110,6 +110,8 @@ urlpatterns += [
 
 urlpatterns += [
     path('listado-ingresos/', views.listado_ingresos_diarios, name='listado_ingresos'),
+    path('historial_ingresos/', views.historial_ingresos, name='historial_ingresos'),
+    path('detalle_ingresos/<str:fecha>/', views.detalle_ingresos_dia, name='detalle_ingresos_dia'),
     path('api/registrar-ingreso/', views.registrar_ingreso, name='registrar_ingreso'),
 ]
 

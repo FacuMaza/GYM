@@ -1,39 +1,96 @@
-<!-- templates/balance/mostrar_balance.html -->
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <title>Balance Diario</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+      .center-container {
+         display: flex;
+         flex-direction: column;
+         justify-content: center;
+         align-items: center;
+         min-height: 60vh;
+      }
+      .card {
+        width: 80%;
+        max-width: 800px; /* Ajustado el ancho máximo de la card */
+         display: flex;
+        flex-direction: column;
+      }
+       .card-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 2rem;
+      }
+       .balance-section {
+          margin-bottom: 1.5rem;
+        }
+         .button-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 1rem;
+    }
+    .spaced-list {
+      padding-left: 1.5rem; /* Añade un poco de espacio a la izquierda de la lista*/
+      margin-bottom: 1rem; /* Agrega un poco de espacio inferior a la lista*/
+      }
+    .spaced-list li {
+      margin-bottom: 0.3rem; /* Espacio entre los elementos de la lista */
+    }
+
+    </style>
 </head>
 <body>
-    <h2>Balance Diario para el Gimnasio: {{ gimnasio_nombre }}</h2>
-     <h3>Fecha: {{ fecha }}</h3>
-    
-    <h3>Ingresos de Hoy</h3>
-    {% if ingresos %}
-        <ul>
-        {% for ingreso in ingresos %}
-        <li>{{ ingreso.descripcion }} - Monto: {{ ingreso.monto|default:"0" }} - Tipo: {{ ingreso.tipo_ingreso }}</li>
-        {% endfor %}
-        </ul>
-        <p>Total Ingresos: {{ total_ingresos|default:"0"}}</p>
+    <div class="center-container">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title text-center">Balance Diario para el Gimnasio: {{ gimnasio_nombre }}</h2>
+                <h3 class="text-center">Fecha: {{ fecha }}</h3>
 
-    {% else %}
-        <p>No hay ingresos registrados para hoy.</p>
-    {% endif %}
+               <div class="balance-section">
+                   <h4>Ingresos de Hoy</h4>
+                    {% if ingresos %}
+                        <ul class="spaced-list">
+                        {% for ingreso in ingresos %}
+                            <li>{{ ingreso.descripcion }} - Monto: {{ ingreso.monto|default:"0" }} - Tipo: {{ ingreso.tipo_ingreso }}</li>
+                        {% endfor %}
+                        </ul>
+                        <p>Total Ingresos: {{ total_ingresos|default:"0"}}</p>
+                    {% else %}
+                         <p>No hay ingresos registrados para hoy.</p>
+                    {% endif %}
+                </div>
 
-    <h3>Egresos de Hoy</h3>
-    {% if egresos %}
-         <ul>
-        {% for egreso in egresos %}
-            <li>{{ egreso.descripcion }} - Monto: {{ egreso.monto|default:"0" }} - Tipo: {{ egreso.tipo_ingreso }}</li>
-        {% endfor %}
-         </ul>
-        <p>Total Egresos: {{ total_egresos|default:"0"}}</p>
-    {% else %}
-        <p>No hay egresos registrados para hoy.</p>
-    {% endif %}
-    <h3>Balance: {{ balance }}</h3>
-    <a href="{% url 'balance_diario' %}">Volver a seleccionar Gimnasio</a>
+               <div class="balance-section">
+                  <h4>Egresos de Hoy</h4>
+                    {% if egresos %}
+                         <ul class="spaced-list">
+                        {% for egreso in egresos %}
+                            <li>{{ egreso.descripcion }} - Monto: {{ egreso.monto|default:"0" }} - Tipo: {{ egreso.tipo_ingreso }}</li>
+                        {% endfor %}
+                         </ul>
+                        <p>Total Egresos: {{ total_egresos|default:"0"}}</p>
+                    {% else %}
+                        <p>No hay egresos registrados para hoy.</p>
+                    {% endif %}
+               </div>
+
+               <h3 class="text-center">Balance: {{ balance }}</h3>
+             </div>
+        </div>
+    <div class="button-container">
+      <a href="{% url 'balance_diario' %}" class="btn btn-secondary">Volver a seleccionar Gimnasio</a>
+   </div>
+    </div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
+{% endblock %}

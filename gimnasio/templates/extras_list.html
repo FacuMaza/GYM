@@ -1,51 +1,117 @@
 {% extends 'base.html' %}
-
 {% block content %}
-    <h2>Lista de Extras</h2>
-    <a href="{% url 'extras_create' %}" class="btn btn-primary mb-3">Crear Nuevo Extra</a>
-
-    <table class="table">
-        <thead>
-            <tr>
-               <th>ID</th>
-                <th>Tipo</th>
-                <th>Descripción</th>
-                <th>Monto</th>
-                <th>Hora</th>
-                <th>Gimnasio</th>
-                <th>Producto</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for extra in extras_lista %}
-                <tr>
-                   <td>{{ extra.id }}</td>
-                    <td>
-                        {% if extra.ingreso %}
-                            Ingreso
-                        {% elif extra.egreso %}
-                            Egreso
-                        {% else %}
-                            -
-                        {% endif %}
-                    </td>
-                    <td>{{ extra.descripcion }}</td>
-                    <td>{{ extra.monto }}</td>
-                     <td>{{ extra.hora }}</td>
-                     <td>{{ extra.gimnasio }}</td>
-                     <td>
-                        {% if extra.producto %}
-                            {{ extra.producto.descripcion }} 
-                        {% else %}
-                            -
-                        {% endif %}
-                    </td>
-                </tr>
-            {% empty %}
-              <tr>
-                <td colspan="9">No hay extras registrados.</td>
-             </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <title>Lista de Extras</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .center-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 60vh;
+        }
+        .card {
+            width: 85%;
+            max-width: 1100px;
+            display: flex;
+            flex-direction: column;
+        }
+        .card-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 2.2rem;
+        }
+        .table-container {
+            flex: 1;
+            overflow-y: auto;
+        }
+        .table th, .table td {
+            font-size: 1.1rem;
+            padding: 0.8rem;
+        }
+         .button-container {
+             display: flex;
+            justify-content: center;
+            margin-top: 1.2rem;
+            margin-bottom: 0.6rem;
+         }
+         .spaced-buttons {
+             display: flex;
+             justify-content: center;
+             gap: 10px;
+             margin-top: 1.2rem;
+             margin-bottom: 0.6rem;
+         }
+        .card-title {
+            font-size: 1.6rem;
+            margin-bottom: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+<div class="center-container">
+    <div class="card">
+        <div class="card-body">
+            <h2 class="card-title">Lista de Extras</h2>
+            
+            <div class="table-container">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                          
+                            <th>Tipo</th>
+                            <th>Descripción</th>
+                            <th>Monto</th>
+                            <th>Hora</th>
+                            <th>Gimnasio</th>
+                             <th>Producto</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for extra in extras_lista %}
+                            <tr>
+                              
+                                <td>
+                                    {% if extra.ingreso %}
+                                        Ingreso
+                                    {% elif extra.egreso %}
+                                        Egreso
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>{{ extra.descripcion }}</td>
+                                <td>{{ extra.monto }}</td>
+                                <td>{{ extra.hora }}</td>
+                                <td>{{ extra.gimnasio }}</td>
+                                <td>
+                                    {% if extra.producto %}
+                                        {{ extra.producto.descripcion }} 
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                             </tr>
+                        {% empty %}
+                          <tr>
+                            <td colspan="9">No hay extras registrados.</td>
+                         </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+           <div class="button-container">
+              <a href="{% url 'extras_create' %}" class="btn btn-primary mb-3">Crear Nuevo Extra</a>
+           </div>
+        </div>
+    </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
 {% endblock %}

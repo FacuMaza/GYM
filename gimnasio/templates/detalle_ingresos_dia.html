@@ -5,8 +5,8 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Listado de Ingresos Diarios</title>
-     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>Detalle de Ingresos del Día: {{ fecha }}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
         .center-container {
             display: flex;
@@ -40,11 +40,11 @@
     </style>
 </head>
 <body>
-    <div class="center-container">
-      <div class="card">
+<div class="center-container">
+    <div class="card">
         <div class="card-body">
-           <h2 class="card-title text-center">Ingresos del día: {{ fecha }}</h2>
-             <div class="table-container">
+            <h2 class="card-title text-center">Detalle de Ingresos del día: {{ fecha }}</h2>
+            <div class="table-container">
                 {% if ingresos %}
                     <table class="table table-striped">
                         <thead>
@@ -58,7 +58,7 @@
                                 <th>Tipo de Mensualidad</th>
                             </tr>
                         </thead>
-                        <tbody>
+                         <tbody>
                             {% for ingreso in ingresos %}
                             <tr>
                                 <td>{{ ingreso.nombre }}</td>
@@ -73,16 +73,15 @@
                         </tbody>
                     </table>
                 {% else %}
-                   <p>No se registraron ingresos en este día.</p>
+                    <p>No se registraron ingresos en este día.</p>
                 {% endif %}
-             </div>
-            <div class="button-container">
-             <a href="{% url 'historial_ingresos' %}" class="btn btn-primary">Historial de Ingresos</a>
-           </div>
-          </div>
-      </div>
+            </div>
+              <div class="button-container">
+                    <a href="{% url 'historial_ingresos' %}" class="btn btn-secondary">Volver al Historial</a>
+               </div>
+        </div>
     </div>
-
+</div>
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>

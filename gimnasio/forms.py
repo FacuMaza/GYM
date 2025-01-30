@@ -66,36 +66,93 @@ from django import forms
 from .models import Socio, TipoMensualidad
 
 class AsignarMensualidadForm(forms.Form):
-    socio = forms.ModelChoiceField(queryset=Socio.objects.all(), label="Socio", widget=forms.TextInput(attrs={'readonly':'readonly'}))
+    socio = forms.CharField(
+        label="Socio",
+        widget=forms.TextInput(attrs={'readonly': 'readonly'}),
+    )
     tipo_mensualidad_display = forms.CharField(label="Tipo de Mensualidad Actual", required=False, widget=forms.TextInput(attrs={'readonly':'readonly'}))
-    tipo_mensualidad = forms.ModelChoiceField(queryset=TipoMensualidad.objects.all(), label="Seleccionar Nueva Mensualidad", required=False, widget=forms.HiddenInput())
+    tipo_mensualidad = forms.ModelChoiceField(
+        queryset=TipoMensualidad.objects.all(),
+        label="Seleccionar Nueva Mensualidad",
+        required=False,
+        widget=forms.Select(),
+        to_field_name='tipo',
+        empty_label="Seleccione una mensualidad"
+    )
     metodo_pago = forms.ChoiceField(choices=[
         ('efectivo', 'Efectivo'),
         ('transferencia', 'Transferencia'),
         ('tarjeta_credito', 'Tarjeta de Crédito')
     ], label="Método de Pago")
     monto = forms.FloatField(label="Monto Recibido")
-    clases_restantes = forms.IntegerField(label="Clases Restantes", required=False, widget=forms.NumberInput()) # Nuevo campo
+    clases_restantes = forms.IntegerField(label="Clases Restantes", required=False, widget=forms.NumberInput())
 
+    def __init__(self, *args, **kwargs):
+        initial_socio = kwargs.pop('initial_socio', None)
+        initial_mensualidad = kwargs.pop('initial_mensualidad', None)
+        super().__init__(*args, **kwargs)
+        if initial_socio:
+            self.initial['socio'] = f"{initial_socio.nombre} {initial_socio.apellido}"
+            self.fields['socio'].widget.attrs['value'] = f"{initial_socio.nombre} {initial_socio.apellido}"
+        if initial_mensualidad:
+            self.initial['tipo_mensualidad'] = initial_mensualidad
+            self.fields['tipo_mensualidad'].initial = initial_mensualidad
+    
     def clean(self):
         cleaned_data = super().clean()
-        tipo_mensualidad = cleaned_data.get('tipo_mensualidad')
-        socio = cleaned_data.get('socio')
+        tipo_mensualidad_seleccionada = cleaned_data.get('tipo_mensualidad')
+        socio_value = cleaned_data.get('socio')
+        monto = cleaned_data.get('monto')
+        clases_restantes = cleaned_data.get('clases_restantes')
         
-        if tipo_mensualidad:
-            # Si se selecciona una nueva mensualidad, el campo clases restantes no es relevante
-            self.fields['clases_restantes'].required = False
-        else:
-            # Si no hay una nueva mensualidad seleccionada, usamos la existente del socio
-            if socio and socio.tipo_mensualidad:
-                cleaned_data['tipo_mensualidad'] = socio.tipo_mensualidad
-                self.fields['clases_restantes'].required = True #Hacerlo requerido
-                return cleaned_data
-            else:
-                self.add_error('tipo_mensualidad', 'Debe Seleccionar una Mensualidad.')
+        if socio_value:
+            cleaned_data['socio'] =  self.initial['socio']
+            try:
+                socio_id = self.initial.get('socio_id')
+                socio = Socio.objects.get(pk=socio_id)
+                
+                if socio.tipo_mensualidad:
+                     # Si el socio ya tiene una mensualidad asignada
+                     tipo_mensualidad_actual = socio.tipo_mensualidad
+                     if not tipo_mensualidad_seleccionada:
+                         # si no se selecciono una nueva mensualidad, uso la actual
+                         cleaned_data['tipo_mensualidad'] = tipo_mensualidad_actual
+                     
+                     #Validacion del monto, tanto si selecciono una nueva mensualidad como si usa la misma
+                     if monto is None:
+                                  self.add_error('monto', 'Este campo es obligatorio al seleccionar una mensualidad')
+                     elif cleaned_data['tipo_mensualidad'].precio != monto:
+                                  self.add_error('monto', 'El monto recibido no coincide con el precio de la mensualidad seleccionada.')
+                     #Validacion de clases restantes
+                     if cleaned_data['tipo_mensualidad'].tipo != 'Pase Libre':
+                           self.fields['clases_restantes'].required = True
+                           if clases_restantes is None and self.fields['clases_restantes'].required:
+                                self.add_error('clases_restantes', 'Este campo es obligatorio cuando la mensualidad no es Pase Libre.')
+                     else:
+                        self.fields['clases_restantes'].required = False
+                        
+                else:#Si el socio no tiene una mensualidad asignada
+                     
+                     if not tipo_mensualidad_seleccionada:
+                          self.add_error('tipo_mensualidad', 'Debe Seleccionar una Mensualidad.')
+                     elif tipo_mensualidad_seleccionada:
+                           if monto is None:
+                                  self.add_error('monto', 'Este campo es obligatorio al seleccionar una nueva mensualidad')
+                           elif tipo_mensualidad_seleccionada.precio != monto:
+                                  self.add_error('monto', 'El monto recibido no coincide con el precio de la mensualidad seleccionada.')
+                           
+                           if cleaned_data['tipo_mensualidad'].tipo != 'Pase Libre':
+                              self.fields['clases_restantes'].required = True
+                              if clases_restantes is None and self.fields['clases_restantes'].required:
+                                self.add_error('clases_restantes', 'Este campo es obligatorio cuando la mensualidad no es Pase Libre.')
+                           else:
+                                 self.fields['clases_restantes'].required = False
 
+            except Socio.DoesNotExist:
+                 self.add_error('socio', 'Socio no encontrado')
         return cleaned_data
 
+    
 class SeleccionarFechaRenovacionForm(forms.Form):
     fecha_renovacion = forms.DateField(widget=DateInput(attrs={'type': 'date', 'min': str(date.today())}))
 
@@ -109,12 +166,17 @@ class ProductoForm(forms.ModelForm):
 class VentaForm(forms.ModelForm):
     total = forms.DecimalField(
         required=False,
-        widget=forms.TextInput(attrs={'readonly': True}),
+        widget=forms.TextInput(attrs={'readonly': True, 'id': 'id_total'}),
         initial=0
-    ) 
+    )
+    
+    efectivo = forms.DecimalField(required=False, initial=0)
+    transferencia = forms.DecimalField(required=False, initial=0)
+    tarjeta_credito = forms.DecimalField(required=False, initial=0)
+
     class Meta:
         model = Venta
-        fields = ['producto', 'cantidad', 'efectivo', 'transferencia', 'tarjeta_credito'] 
+        fields = ['producto', 'cantidad', 'efectivo', 'transferencia', 'tarjeta_credito']
 
     def __init__(self, *args, **kwargs):
         super(VentaForm, self).__init__(*args, **kwargs)
@@ -123,20 +185,29 @@ class VentaForm(forms.ModelForm):
 
     def producto_label_from_instance(self, obj):
        return f"{obj.descripcion} - ${obj.precio}"
-
+    
     def clean(self):
         cleaned_data = super().clean()
         producto = cleaned_data.get('producto')
         cantidad = cleaned_data.get('cantidad')
-
+        efectivo = cleaned_data.get('efectivo') or 0
+        transferencia = cleaned_data.get('transferencia') or 0
+        tarjeta_credito = cleaned_data.get('tarjeta_credito') or 0
+        total = self.data.get('total')
+        
         if producto and cantidad:
             if cantidad > producto.cantidad:
-                 raise ValidationError(
+                raise ValidationError(
                      f'No hay suficiente stock para este producto. Hay {producto.cantidad} disponibles.'
-                 )
-
+                )
+        
+        if total is not None:
+          total = float(total)
+          suma_pagos = float(efectivo) + float(transferencia) + float(tarjeta_credito)
+          if suma_pagos != total:
+            raise ValidationError("La suma de los pagos debe ser igual al total.")
+           
         return cleaned_data
-    
 
 class ExtrasForm(forms.ModelForm):
     TIPO_CHOICES = [
@@ -166,6 +237,20 @@ class ExtrasForm(forms.ModelForm):
     
 
 
+##historial de ingrso 
+class HistorialIngresosForm(forms.Form):
+    fecha_inicio = forms.DateField(
+        label='Fecha Inicio',
+        widget=forms.DateInput(attrs={'type': 'date'}),
+        initial=date.today(),
+        required = False,
+    )
+    fecha_fin = forms.DateField(
+        label='Fecha Fin',
+        widget=forms.DateInput(attrs={'type': 'date'}),
+          initial=date.today(),
+        required = False,
+    )
 
 ## SELECCIONAR GYM DENTRO DEL DIARIO
 

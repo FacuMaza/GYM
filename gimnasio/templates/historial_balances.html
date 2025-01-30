@@ -1,39 +1,107 @@
-<!-- templates/balance/historial_balances.html -->
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <title>Historial de Balances</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .center-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 60vh;
+        }
+        .card {
+          width: 90%;
+          max-width: 1000px;
+           display: flex;
+            flex-direction: column;
+        }
+        .card-body {
+            flex: 1;
+           display: flex;
+            flex-direction: column;
+            padding: 2rem;
+        }
+          .table-container {
+            flex: 1;
+             overflow-y: auto;
+        }
+         .button-container {
+          display: flex;
+          justify-content: center;
+          margin-top: 1rem;
+           margin-bottom: 0.5rem;
+        }
+        .full-width-button-container {
+            display: flex;
+            justify-content: flex-end;
+            width: 100%;
+        }
+        .full-width-button-container a {
+             display: inline-block;
+             white-space: nowrap; /* Añadido para evitar que el texto se divida en líneas */
+        }
+    </style>
 </head>
 <body>
-    <h2>Historial de Balances Diarios</h2>
-    {% if all_gimnasios %}
-      {% for gimnasio in all_gimnasios %}
-        <h3>{{ gimnasio.direccion }}</h3>
-        {% if gimnasio in gimnasios_con_historial %}
-             {% for key, balances in grouped_balances.items %}
-                  {% with gimnasio_direccion=key.0 year=key.1 month=key.2 %}
-                      {% if gimnasio_direccion == gimnasio.direccion %}
-                         <ul>
-                            {% for balance in balances %}
-                                <li>
-                                    {{ month }}/{{ year }}
-                                    <a href="{% url 'detalle_balance' balance_id=balance.id %}">
-                                      <button>Ver Detalle</button>
-                                    </a>
-                                </li>
-                           {% endfor %}
-                      </ul>
-                   {% endif %}
-                  {% endwith %}
-              {% endfor %}
-        {% else %}
-        <p>No hay historial para este gimnasio.</p>
-      {% endif %}
-     {% endfor %}   
-    {% else %}
-        <p>No hay balances guardados todavía.</p>
-    {% endif %}
-    <a href="{% url 'balance_diario' %}">Volver</a>
+    <div class="center-container">
+      <div class="card">
+        <div class="card-body">
+           <h2 class="card-title text-center">Historial de Balances Diarios</h2>
+            <div class="table-container">
+              {% if all_gimnasios %}
+                  {% for gimnasio in all_gimnasios %}
+                       <h3 class="text-center">{{ gimnasio.direccion }}</h3>
+                      {% if gimnasio in gimnasios_con_historial %}
+                          <table class="table table-striped">
+                              <thead>
+                                  <tr>
+                                      <th>Mes/Año</th>
+                                      <th style="width: 1%;">Acciones</th>
+                                  </tr>
+                              </thead>
+                              <tbody>
+                                  {% for key, balances in grouped_balances.items %}
+                                      {% with gimnasio_direccion=key.0 year=key.1 month=key.2 %}
+                                          {% if gimnasio_direccion == gimnasio.direccion %}
+                                              {% for balance in balances %}
+                                                  <tr>
+                                                      <td>{{ month }}/{{ year }}</td>
+                                                      <td>
+                                                         <div class="full-width-button-container">
+                                                                <a href="{% url 'detalle_balance' balance_id=balance.id %}" class="btn btn-primary">Ver Detalle</a>
+                                                            </div>
+                                                      </td>
+                                                 </tr>
+                                              {% endfor %}
+                                          {% endif %}
+                                      {% endwith %}
+                                  {% endfor %}
+                              </tbody>
+                          </table>
+                        {% else %}
+                        <p>No hay historial para este gimnasio.</p>
+                    {% endif %}
+                {% endfor %}
+                {% else %}
+                    <p>No hay balances guardados todavía.</p>
+              {% endif %}
+            </div>
+          </div>
+      </div>
+         <div class="button-container">
+            <a href="{% url 'balance_diario' %}" class="btn btn-secondary">Volver</a>
+        </div>
+    </div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
+{% endblock %}

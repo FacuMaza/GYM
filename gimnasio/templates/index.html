@@ -1,16 +1,94 @@
 {% extends 'base.html' %}
 {% load static %}
 
-    {% block content %}
-      <body>
-            <main>
-              <h1>Bienvenido {{ usuario.usuario }}! ({{ tipo_usuario }})</h1>
-              <form method="post" action="{% url 'logout' %}">
-                {% csrf_token %}
-                <button type="submit">Cerrar Sesión</button>
-            </form>
-              
-            </main>
-          
-          </body>
-    {% endblock %}
+{% block content %}
+<body>
+  <h1>Bienvenido {{ usuario }}!</h1>
+  <form method="post" action="{% url 'logout' %}">
+      {% csrf_token %}
+      <button type="submit">Cerrar Sesión</button>
+  </form>
+    <main class="container">
+       
+
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="card-title">Últimos Socios Agregados</h2>
+                        {% if ultimos_socios %}
+                            <div class="row">
+                                {% for socio in ultimos_socios %}
+                                    <div class="col-md-6">
+                                        <a href="{% url 'detalle_socio' socio.pk %}">
+                                            {{ socio.nombre }} {{ socio.apellido }}
+                                        </a>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p>No hay socios agregados recientemente.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+               <div class="card">
+                  <div class="card-body">
+                   <h2 class="card-title">Últimas Cuotas Agregadas</h2>
+                        {% if ultimas_cuotas %}
+                            <div class="row">
+                                {% for cuota in ultimas_cuotas %}
+                                    <div class="col-md-12 mb-2">
+                                        
+                                            <div class="card-body">
+                                                <h5 class="card-title">Cuota de: {{ cuota.socio.nombre }} {{ cuota.socio.apellido }}</h5>
+                                                <p class="card-text">
+                                                    <strong>Tipo Mensualidad:</strong> {{ cuota.tipo_mensualidad }}<br>
+                                                    
+                                                    <strong>Fecha Inicio:</strong> {{ cuota.fecha_inicio }}
+                                                </p>
+                                            </div>
+                                        
+                                    </div>
+                                {% endfor %}
+                            </div>
+                         {% else %}
+                            <p>No hay cuotas agregadas recientemente.</p>
+                         {% endif %}
+                     </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="card-title">Últimas Ventas Agregadas</h2>
+                        {% if ultimas_ventas %}
+                            <div class="row">
+                                {% for venta in ultimas_ventas %}
+                                    <div class="col-md-12 mb-2">
+                                        
+                                          <div class="card-body">
+                                            <h5 class="card-title">Venta de: {{ venta.producto.descripcion }}</h5>
+                                            <p class="card-text">
+                                                <strong>Cantidad:</strong> {{ venta.cantidad }}<br>
+                                            
+                                                
+                                            </p>
+                                          </div>
+                                        
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p>No hay ventas agregadas recientemente.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+{% endblock %}
