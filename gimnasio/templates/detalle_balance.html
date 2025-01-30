@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Detalle del Balance</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+       .center-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 60vh;
+        }
+        .card {
+          width: 90%;
+          max-width: 1000px;
+          display: flex;
+            flex-direction: column;
+        }
+         .card-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 2rem;
+        }
+         .balance-section {
+            margin-bottom: 1.5rem;
+          }
+       .table-container {
+             flex: 1;
+             overflow-y: auto;
+         }
+         .button-container {
+            display: flex;
+            justify-content: center;
+             margin-top: 1rem;
+             margin-bottom: 0.5rem;
+         }
+        .full-width-button-container {
+            display: flex;
+            justify-content: flex-end;
+             width: 100%;
+        }
+        .full-width-button-container a {
+             display: inline-block;
+             white-space: nowrap; /* Añadido para evitar que el texto se divida en líneas */
+        }
+    </style>
+</head>
+<body>
+    <div class="center-container">
+      <div class="card">
+        <div class="card-body">
+           <h2 class="card-title text-center">Detalle del Balance del {{ balance.fecha }} para {{ balance.gimnasio.direccion }}</h2>
+           <div class="balance-section">
+              <p>Total Ingresos: {{ balance.total_ingresos|default:"0" }}</p>
+              <p>Total Egresos: {{ balance.total_egresos|default:"0" }}</p>
+              <p>Balance: {{ balance.balance|default:"0" }}</p>
+           </div>
+           <div class="balance-section">
+             <h4>Ingresos:</h4>
+                {% if ingresos %}
+                <div class="table-container">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Descripción</th>
+                                <th>Monto</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                             {% for ingreso in ingresos %}
+                            <tr>
+                                <td>{{ ingreso.descripcion }}</td>
+                                <td>${{ ingreso.monto }}</td>
+                             </tr>
+                              {% endfor %}
+                        </tbody>
+                    </table>
+               </div>
+                {% else %}
+                <p>No hay ingresos registrados para este día.</p>
+                 {% endif %}
+            </div>
+             <div class="balance-section">
+                 <h4>Egresos:</h4>
+                   {% if egresos %}
+                   <div class="table-container">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Descripción</th>
+                                    <th>Monto</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for egreso in egresos %}
+                                 <tr>
+                                     <td>{{ egreso.descripcion }}</td>
+                                     <td>${{ egreso.monto }}</td>
+                                 </tr>
+                              {% endfor %}
+                             </tbody>
+                        </table>
+                   </div>
+                    {% else %}
+                       <p>No hay egresos registrados para este día.</p>
+                    {% endif %}
+             </div>
+          </div>
+      </div>
+      <div class="button-container">
+           <a href="{% url 'historial_balances' %}" class="btn btn-secondary">Volver al Historial</a>
+       </div>
+    </div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
+{% endblock %}

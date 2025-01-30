@@ -102,6 +102,7 @@ urlpatterns += [
     path('balance/', views.balance_diario, name='balance_diario'),
     path('balance/<int:gimnasio_id>/', views.mostrar_balance, name='mostrar_balance'),
     path('historial/', views.historial_balances, name='historial_balances'),
+    path('detalle_balance/<int:balance_id>/', views.detalle_balance, name='detalle_balance'),
 ]
 
 
@@ -109,6 +110,8 @@ urlpatterns += [
 
 urlpatterns += [
     path('listado-ingresos/', views.listado_ingresos_diarios, name='listado_ingresos'),
+    path('historial_ingresos/', views.historial_ingresos, name='historial_ingresos'),
+    path('detalle_ingresos/<str:fecha>/', views.detalle_ingresos_dia, name='detalle_ingresos_dia'),
     path('api/registrar-ingreso/', views.registrar_ingreso, name='registrar_ingreso'),
 ]
 

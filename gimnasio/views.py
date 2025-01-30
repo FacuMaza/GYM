@@ -11,6 +11,8 @@ from django.contrib import messages
 from django.db import transaction
 from django.db.models import F
 import json
+from django.db.models import Count
+from django.db.models.functions import TruncDate
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.cache import never_cache
 from .models import *
@@ -60,11 +62,36 @@ def logout_view(request):
     return redirect('login')
 
 
+
+
 @login_required
 def index(request):
-        usuario = Usuario.objects.get(usuario=request.user.username)
-        tipo_usuario = usuario.tipo_usuario
-        return render(request, 'index.html', {'usuario': usuario, 'tipo_usuario': tipo_usuario})
+    usuario_obj = Usuario.objects.get(usuario=request.user.username)
+    tipo_usuario = usuario_obj.tipo_usuario
+
+    if request.user.is_authenticated:
+        usuario = request.user.username
+        if request.user.is_superuser:
+            tipo_usuario = 'admin'
+        elif request.user.groups.filter(name='empleado').exists():
+            tipo_usuario = 'empleado'
+
+    # Obtener los últimos 5 socios agregados, por ejemplo
+    ultimos_socios = Socio.objects.order_by('-id')[:2]
+
+    # Obtener las últimas 5 cuotas agregadas
+    ultimas_cuotas = Cuota.objects.order_by('-id')[:2]
+
+    # Obtener las últimas 5 ventas agregadas
+    ultimas_ventas = Venta.objects.order_by('-id')[:2]
+
+    return render(request, 'index.html', {
+        'usuario': usuario,
+        'tipo_usuario': tipo_usuario,
+        'ultimos_socios': ultimos_socios,
+        'ultimas_cuotas': ultimas_cuotas,
+        'ultimas_ventas': ultimas_ventas
+    })
 
 
 ##SOCIOS
@@ -331,41 +358,48 @@ def asignar_mensualidad(request):
     socio_id = request.GET.get('socio')
     socio = None
     initial_data = {}
+    mensualidad_actual = None
 
     if socio_id:
         socio = get_object_or_404(Socio, id=socio_id)
-        initial_data['socio'] = socio #Precarga el campo socio
-        
-        # Obtener la mensualidad actual del socio
-        if socio.tipo_mensualidad:
-            initial_data['tipo_mensualidad_display'] = str(socio.tipo_mensualidad)  # Mostrar el tipo de mensualidad actual
-            
+        initial_data['socio'] = f"{socio.nombre} {socio.apellido}"
+        initial_data['socio_id'] = socio.id
 
+        if socio.tipo_mensualidad:
+            initial_data['tipo_mensualidad_display'] = str(socio.tipo_mensualidad)
+            mensualidad_actual = socio.tipo_mensualidad
+            
     if request.method == 'POST':
-        form = AsignarMensualidadForm(request.POST)
+        form = AsignarMensualidadForm(request.POST, initial=initial_data)
         if form.is_valid():
-            socio = form.cleaned_data['socio']
+            socio_id = form.initial.get('socio_id')
+            socio = Socio.objects.get(pk=socio_id)
             tipo_mensualidad = form.cleaned_data['tipo_mensualidad']
             metodo_pago = form.cleaned_data['metodo_pago']
             monto = form.cleaned_data['monto']
-            clases_restantes = form.cleaned_data.get('clases_restantes') # Obtener clases restantes
-            
-            #Actualizar clases restantes
+            clases_restantes = form.cleaned_data.get('clases_restantes')
+
+            # Actualizar clases restantes
             if clases_restantes is not None:
                 socio.clases_restantes = clases_restantes
-                socio.save() #guardar los cambios en el socio
 
-             #Obtenemos la ultima cuota
+            # Obtener la última cuota (si existe)
             try:
-              cuota_anterior = Cuota.objects.filter(socio=socio).latest('fecha_inicio')
+                cuota_anterior = Cuota.objects.filter(socio=socio).latest('fecha_inicio')
             except Cuota.DoesNotExist:
-             cuota_anterior = None
-
-            #eliminamos la cuota anterior
+                cuota_anterior = None
+            
+            # Eliminar la cuota anterior
             if cuota_anterior:
-              cuota_anterior.delete()
+                cuota_anterior.delete()
+            
+            # Actualizar el tipo de mensualidad del socio
+            if tipo_mensualidad:
+                socio.tipo_mensualidad = tipo_mensualidad
+            
+            socio.save()
 
-            # Crear la cuota y guardar la fecha de inicio
+            # Crear la nueva cuota
             cuota = Cuota.objects.create(
                 socio=socio,
                 tipo_mensualidad=tipo_mensualidad,
@@ -374,7 +408,7 @@ def asignar_mensualidad(request):
                 fecha_inicio=date.today()
             )
             
-            #Registrar el ingreso
+            # Registrar el ingreso
             ingresos.objects.create(
               descripcion=f"Mensualidad de {socio.nombre} {socio.apellido}",
               monto=monto,
@@ -391,14 +425,11 @@ def asignar_mensualidad(request):
               cuota.tarjeta_credito = monto
             cuota.save()
 
-
             return redirect('lista_cuotas')
     else:
         form = AsignarMensualidadForm(initial=initial_data)
-        
 
     return render(request, 'asignar_mensualidad.html', {'form': form, 'socio_id': socio_id})
-
 
 
 @login_required
@@ -698,7 +729,7 @@ def balance_diario(request):
         form = SeleccionGimnasioForm(request.POST)
         if form.is_valid():
             gimnasio_seleccionado = form.cleaned_data['gimnasio']
-            return redirect('mostrar_balance', gimnasio_id=gimnasio_seleccionado.id) 
+            return redirect('mostrar_balance', gimnasio_id=gimnasio_seleccionado.id)
     else:
         form = SeleccionGimnasioForm()
     return render(request, 'seleccionar_gimnasio.html', {'form': form})
@@ -713,8 +744,30 @@ def mostrar_balance(request, gimnasio_id):
         total_ingresos = sum(ingreso.monto for ingreso in ingresos_hoy if ingreso.monto)
         total_egresos = sum(egreso.monto for egreso in egresos_hoy if egreso.monto)
         balance = total_ingresos - total_egresos
-        gimnasio_nombre = ingresos_hoy.first().gimnasio.direccion if ingresos_hoy else egresos_hoy.first().gimnasio.direccion if egresos_hoy else None
         
+        # Obtener el gimnasio directamente desde el ID
+        try:
+             gimnasio_seleccionado = Gimnasio.objects.get(id=gimnasio_id)
+             gimnasio_nombre = gimnasio_seleccionado.direccion
+        except Gimnasio.DoesNotExist:
+             gimnasio_seleccionado = None
+             gimnasio_nombre = None
+        
+        # Guardar el balance diario (con `get_or_create` y manejo de update)
+        if gimnasio_seleccionado:
+            balance_diario, created = BalanceDiario.objects.get_or_create(
+                gimnasio=gimnasio_seleccionado,
+                fecha=hoy,
+                defaults={'total_ingresos': total_ingresos,
+                          'total_egresos': total_egresos,
+                          'balance': balance}
+            )
+            if not created:
+                balance_diario.total_ingresos = total_ingresos
+                balance_diario.total_egresos = total_egresos
+                balance_diario.balance = balance
+                balance_diario.save()
+
         context = {
             'gimnasio_id': gimnasio_id,
             'gimnasio_nombre': gimnasio_nombre,
@@ -731,10 +784,42 @@ def mostrar_balance(request, gimnasio_id):
         return render(request, 'error.html',{'error':e})
 
 
-
 def historial_balances(request):
-     balances = BalanceDiario.objects.all()
-     return render(request, 'historial_balances.html', {'balances': balances})
+    balances = BalanceDiario.objects.all().order_by('-fecha')
+    
+    # Agrupar balances por gimnasio, mes y año
+    grouped_balances = {}
+    for balance in balances:
+        key = (balance.gimnasio.direccion, balance.fecha.year, balance.fecha.month)
+        if key not in grouped_balances:
+            grouped_balances[key] = []
+        grouped_balances[key].append(balance)
+
+    gimnasios_con_historial = [balance.gimnasio for balance in balances]
+    
+    
+    all_gimnasios = Gimnasio.objects.all()
+    context = {
+        'grouped_balances': grouped_balances,
+        'gimnasios_con_historial': gimnasios_con_historial,
+        'all_gimnasios' : all_gimnasios,
+    }
+
+    return render(request, 'historial_balances.html', context)
+
+
+def detalle_balance(request, balance_id):
+    balance = get_object_or_404(BalanceDiario, id=balance_id)
+    
+    ingresos_hoy = ingresos.objects.filter(gimnasio=balance.gimnasio, fecha=balance.fecha)
+    egresos_hoy = egreso.objects.filter(gimnasio=balance.gimnasio, fecha=balance.fecha)
+    
+    context = {
+        'balance': balance,
+        'ingresos': ingresos_hoy,
+        'egresos': egresos_hoy,
+    }
+    return render(request, 'detalle_balance.html', context)
 
 
 
@@ -791,6 +876,82 @@ def listado_ingresos_diarios(request):
 
     context = {'ingresos': ingresos_con_socio, 'fecha': fecha}
     return render(request, 'listado_ingresos.html', context)
+
+def historial_ingresos(request):
+    form = HistorialIngresosForm(request.GET)
+    fecha_inicio = None
+    fecha_fin= None
+    if form.is_valid():
+         fecha_inicio = form.cleaned_data.get('fecha_inicio')
+         fecha_fin = form.cleaned_data.get('fecha_fin')
+
+    if fecha_inicio and fecha_fin:
+        registros = RegistroIngreso.objects.filter(fecha_ingreso__date__gte=fecha_inicio,fecha_ingreso__date__lte=fecha_fin).annotate(fecha_truncada=TruncDate('fecha_ingreso')).values('fecha_truncada').annotate(cantidad=Count('id')).order_by('-fecha_truncada')
+    else:
+        registros = RegistroIngreso.objects.all().annotate(fecha_truncada=TruncDate('fecha_ingreso')).values('fecha_truncada').annotate(cantidad=Count('id')).order_by('-fecha_truncada')
+   
+    ingresos_por_fecha = {item['fecha_truncada']: item['cantidad'] for item in registros}
+
+    context = {
+        'ingresos_por_fecha': ingresos_por_fecha,
+        'form': form,
+        'fecha_inicio': fecha_inicio.strftime('%Y-%m-%d') if fecha_inicio else None,
+        'fecha_fin':fecha_fin.strftime('%Y-%m-%d') if fecha_fin else None,
+    }
+
+    return render(request, 'historial_ingresos.html', context)
+
+def detalle_ingresos_dia(request, fecha):
+    registros_ingreso = RegistroIngreso.objects.filter(fecha_ingreso__date=fecha).order_by('-fecha_ingreso')
+    ingresos_con_socio = []
+
+    for registro in registros_ingreso:
+        try:
+            socio = Socio.objects.get(dni=registro.dni_socio)
+            try:
+                ultima_cuota = Cuota.objects.filter(socio=socio).latest('fecha_inicio')
+                fecha_vencimiento = ultima_cuota.fecha_inicio + timedelta(days=30)
+            except Cuota.DoesNotExist:
+                fecha_vencimiento = None
+            
+            ingresos_con_socio.append({
+                'nombre': registro.nombre_socio,
+                'apellido': registro.apellido_socio,
+                'dni': registro.dni_socio,
+                'fecha_ingreso': registro.fecha_ingreso,
+                'fecha_vencimiento': fecha_vencimiento,
+                'clases_restantes': registro.clases_restantes_al_ingresar,
+                 'tipo_mensualidad': socio.tipo_mensualidad.tipo if socio.tipo_mensualidad else 'Sin mensualidad',
+            })
+        except Socio.DoesNotExist:
+              ingresos_con_socio.append({
+                'nombre': registro.nombre_socio,
+                'apellido': registro.apellido_socio,
+                'dni': registro.dni_socio,
+                'fecha_ingreso': registro.fecha_ingreso,
+                'fecha_vencimiento': None,
+                'clases_restantes': registro.clases_restantes_al_ingresar,
+                 'tipo_mensualidad': 'Socio no encontrado',
+            })
+        except Exception as e:
+             ingresos_con_socio.append({
+                'nombre': registro.nombre_socio,
+                'apellido': registro.apellido_socio,
+                'dni': registro.dni_socio,
+                'fecha_ingreso': registro.fecha_ingreso,
+                'fecha_vencimiento': None,
+                'clases_restantes': registro.clases_restantes_al_ingresar,
+                 'tipo_mensualidad': 'Error al obtener mensualidad',
+             })
+
+
+    context = {
+        'ingresos': ingresos_con_socio,
+        'fecha': fecha,
+    }
+    return render(request, 'detalle_ingresos_dia.html', context)
+
+
     
 @csrf_exempt
 def api_socios(request, socio_id=None):

@@ -2,73 +2,89 @@
 {% load static %}
 {% block content %}
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Crear/Editar Venta</title>
+    <title>Venta</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
-        .form-container {
-            width: 40%;
-            margin: 30px auto;
-            padding: 10px 20px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            text-align: center;
+      .center-container {
+         display: flex;
+         justify-content: center;
+         align-items: center;
+         min-height: 60vh;
+      }
+      .card {
+        width: 60%; /* Reducido el ancho de la tarjeta */
+        max-width: 600px; /* Reducido el max-width */
+        display: flex;
+        flex-direction: column;
+      }
+       .card-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 1.5rem; /* Reducido el padding */
+    }
+      .button-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 0.8rem; /* Reducido el margin top */
+        margin-bottom: 0.4rem; /* Reducido el margin bottom */
+    }
+      .spaced-buttons {
+          display: flex;
+          justify-content: center;
+          gap: 8px; /* Reducido el gap */
+          margin-top: 0.8rem; /* Reducido el margin top */
+          margin-bottom: 0.4rem; /* Reducido el margin bottom */
+      }
+        .form-group label {
+          display: block;
+          margin-bottom: 0.3rem; /* Reducido el margin bottom */
+            font-size: 0.9rem; /* Reducido el font size */
         }
-
-        .form-container h1 {
-            margin-bottom: 15px;
-        }
-
-        .form-container form {
-            display: inline-block;
-            text-align: left;
-            width: 100%;
-        }
-
-         .form-container label {
-            display: block;
-            margin-bottom: 3px;
-         }
-
-        .form-container input,
-        .form-container select {
-             width: 90%;
-             padding: 6px;
-             margin-bottom: 8px;
+         .form-group input,
+         .form-group select {
+             width: 100%;
+             padding: 0.4rem; /* Reducido el padding */
+             margin-bottom: 0.7rem; /* Reducido el margin bottom */
              border: 1px solid #ddd;
-             border-radius: 4px;
-         }
-
-         .form-container button {
-            padding: 8px 12px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 8px;
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-            }
-
-         .form-container a {
-             margin-top: 15px;
-             display: block;
-         }
-
+             border-radius: 0.2rem; /* Reducido el border radius */
+             font-size: 0.9rem;  /* Reducido el font size */
+           }
+        .card-title{
+            font-size: 1.2rem;  /* Reducido el font size */
+            margin-bottom: 0.8rem; /* Reducido el margin bottom */
+        }
     </style>
 </head>
 <body>
-    <div class="form-container">
-    
-        <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit">Guardar</button>
-        </form>
-      <a href="{% url 'venta_list' %}">Volver a la lista de ventas</a>
+    <div class="center-container">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title">Venta</h2>
+                <form method="post">
+                    {% csrf_token %}
+                     {% for field in form %}
+                     <div class="form-group">
+                         {{ field.label_tag }}
+                         {{ field }}
+                         {% if field.errors %}
+                              <div class="alert alert-danger" role="alert" style="font-size:0.8rem;">
+                                 {{ field.errors|join:", " }}
+                               </div>
+                         {% endif %}
+                     </div>
+                     {% endfor %}
+                   <div class="spaced-buttons">
+                        <button type="submit" class="btn btn-primary btn-sm">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="button-container">
+          <a href="{% url 'venta_list' %}" class="btn btn-secondary btn-sm">Volver a la lista de ventas</a>
     </div>
     <script>
          document.addEventListener('DOMContentLoaded', function() {
@@ -99,6 +115,9 @@
              calcularTotal();
          });
      </script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
 {% endblock %}

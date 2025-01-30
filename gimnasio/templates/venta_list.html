@@ -1,41 +1,99 @@
 {% extends 'base.html' %}
 {% block content %}
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
     <title>Lista de Ventas</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .center-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 60vh;
+        }
+        .card {
+            width: 85%;
+            max-width: 1100px;
+            display: flex;
+            flex-direction: column;
+        }
+        .card-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 2.2rem;
+        }
+        .table-container {
+            flex: 1;
+            overflow-y: auto;
+        }
+        .table th, .table td {
+            font-size: 1.1rem;
+            padding: 0.8rem;
+        }
+        .button-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 1.2rem;
+            margin-bottom: 0.6rem;
+        }
+          .spaced-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 1.2rem;
+            margin-bottom: 0.6rem;
+        }
+         .card-title {
+             font-size: 1.6rem;
+             margin-bottom: 1.2rem;
+        }
+    </style>
 </head>
 <body>
-    <h1>Lista de Ventas</h1>
-    <a href="{% url 'venta_crear' %}">Crear Nueva Venta</a>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Producto</th>
-                <th>Usuario</th>
-                <th>Cantidad</th>
-                 <th>Gimnasio</th>
-                <th>Efectivo</th>
-                <th>Transferencia</th>
-                <th>Tarjeta Crédito</th>
-                <!--<th>Acciones</th>-->
-            </tr>
-        </thead>
-        <tbody>
-            {% for venta in ventas %}
-                <tr>
-                    <td>{{ venta.producto.descripcion }}</td>
-                    <td>{{ venta.usuario }}</td>
-                    <td>{{ venta.cantidad }}</td>
-                      <td>{{ venta.gimnasio }}</td>
-                    <td>{{ venta.efectivo|default_if_none:"" }}</td>
-                    <td>{{ venta.transferencia|default_if_none:"" }}</td>
-                    <td>{{ venta.tarjeta_credito|default_if_none:"" }}</td>
-                    
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="center-container">
+    <div class="card">
+        <div class="card-body">
+            <h2 class="card-title">Lista de Ventas</h2>
+            
+            <div class="table-container">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Usuario</th>
+                            <th>Cantidad</th>
+                            <th>Gimnasio</th>
+                            <th>Efectivo</th>
+                            <th>Transferencia</th>
+                            <th>Tarjeta Crédito</th>
+                         </tr>
+                    </thead>
+                    <tbody>
+                        {% for venta in ventas %}
+                            <tr>
+                                <td>{{ venta.producto.descripcion }}</td>
+                                <td>{{ venta.usuario }}</td>
+                                <td>{{ venta.cantidad }}</td>
+                                <td>{{ venta.gimnasio }}</td>
+                                <td>{{ venta.efectivo|default_if_none:"" }}</td>
+                                <td>{{ venta.transferencia|default_if_none:"" }}</td>
+                                <td>{{ venta.tarjeta_credito|default_if_none:"" }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="button-container">
+                 <a href="{% url 'venta_crear' %}" class="btn btn-primary mb-3">Crear Nueva Venta</a>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
 {% endblock %}
