@@ -1,3 +1,6 @@
+
+box.sqlite3
+
 *.pyc
 __pycache__/
 *.sqlite3
@@ -7,3 +10,4 @@ db.sqlite3
 venv/
 env/
 box.sqlite3
+
