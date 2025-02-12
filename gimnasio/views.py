@@ -48,11 +48,11 @@ def logout_view(request):
 
 @login_required
 def index(request):
-    usuario = request.user.username  # Obtén el nombre de usuario del usuario autenticado
-    tipo_usuario = None  # Inicializa tipo_usuario
+    usuario = request.user.username
+    tipo_usuario = None
 
     if request.user.is_superuser:
-        tipo_usuario = 'admin'
+        tipo_usuario = 'admin'  # Priorizar superusuario
     elif request.user.groups.filter(name='empleado').exists():
         tipo_usuario = 'empleado'
     else:
@@ -61,11 +61,7 @@ def index(request):
             usuario_obj = Usuario.objects.get(usuario=request.user.username)
             tipo_usuario = usuario_obj.tipo_usuario
         except Usuario.DoesNotExist:
-            # Manejar el caso en que el usuario no exista en tu modelo Usuario
-            tipo_usuario = 'miembro'  # Asigna un tipo de usuario por defecto
-            # o puedes mostrar un mensaje de error en el template
-            # return render(request, 'index.html', {'error': 'No se encontró tu perfil. Contacta al administrador.'})
-
+            tipo_usuario = 'miembro'
 
     # Obtener los últimos socios, cuotas y ventas
     ultimos_socios = Socio.objects.order_by('-id')[:2]
