@@ -37,7 +37,7 @@ def login_view(request):
                 return redirect('index')
         else:
             error = 'Usuario o contraseña incorrecta'
-    return render(request, 'login.html', {'error': error})
+    return render(request, 'login.html', {'error': error}) #ESTA ES LA LINEA IMPORTANTE
 
 def logout_view(request):
     logout(request)
