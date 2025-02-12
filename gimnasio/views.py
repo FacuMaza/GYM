@@ -17,44 +17,40 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.cache import never_cache
 from .models import *
 from .forms import *
+import logging
 # Create your views here.
+
+logger = logging.getLogger(__name__)
+
 
 @never_cache
 def login_view(request):
-    error = None
     if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        user = authenticate(request, username=username, password=password)
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password']
+            user = authenticate(request, username=username, password=password)
 
-        if user is not None:
-            login(request, user)
-            
-            # Obtener el objeto Usuario de tu modelo personalizado
-            try:
-                usuario_modelo = Usuario.objects.get(usuario=username)
-                # Almacenar el tipo de usuario en la sesión
-                request.session['tipo_usuario'] = usuario_modelo.tipo_usuario.tipousuario
-            except Usuario.DoesNotExist:
-                # Manejar el caso en que el usuario no exista en tu modelo Usuario
-                pass
-            
-             # Obtener el parámetro 'next' de la URL
-            next_url = request.GET.get('next')
-            if next_url:
-                return redirect(next_url)
+            if user is not None:
+                login(request, user)
+                logger.debug(f"Usuario autenticado: {username}")
+                next_url = request.GET.get('next')
+                if next_url:
+                    return redirect(next_url)
+                else:
+                    return redirect('index')
             else:
-                return redirect('index')  # Redirige a 'index' si no hay 'next'
+                logger.debug(f"Fallo la autenticacion para el usuario: {username}")
+                messages.error(request, 'Usuario o contraseña incorrectos') # Esto muestra un mensaje en la página
         else:
-           try:
-              usuario_modelo = Usuario.objects.get(usuario=username)
-              if check_password(password,usuario_modelo.contrasena):
-                  return render(request, 'login.html', {'error': 'No tienes permisos para ingresar'})
-           except Usuario.DoesNotExist:
-               pass
-           return render(request, 'login.html', {'error': 'Usuario o contraseña incorrecta'})
+            logger.debug(f"Formulario Invalido")
+            messages.error(request, 'Por favor, corrija los errores en el formulario.')# Esto muestra un mensaje en la página
+            #form.add_error(None, "Usuario o contraseña incorrectos") #Esto está mal. Se agrega el error a un campo en especifico.
     else:
-        return render(request, 'login.html')
+        form = LoginForm()
+
+    return render(request, 'login.html', {'form': form})
 
 
 def logout_view(request):
