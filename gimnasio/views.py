@@ -21,14 +21,16 @@ from .forms import *
 
 @never_cache
 def login_view(request):
-    error = None
+    error = None  # Inicializa 'error' con None
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
+
+        # **PRIMERO:** Intenta autenticar con el sistema de autenticación de Django
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
-            login(request, user)
+            login(request, user)  # Inicia sesión con el usuario de Django
             
             # Obtener el objeto Usuario de tu modelo personalizado
             try:
@@ -39,22 +41,28 @@ def login_view(request):
                 # Manejar el caso en que el usuario no exista en tu modelo Usuario
                 pass
             
-             # Obtener el parámetro 'next' de la URL
+            # Obtener el parámetro 'next' de la URL
             next_url = request.GET.get('next')
             if next_url:
                 return redirect(next_url)
             else:
                 return redirect('index')  # Redirige a 'index' si no hay 'next'
         else:
-           try:
-              usuario_modelo = Usuario.objects.get(usuario=username)
-              if check_password(password,usuario_modelo.contrasena):
+            # **SEGUNDO:** Si la autenticación estándar falla, intenta autenticar con tu modelo personalizado
+            try:
+                usuario_modelo = Usuario.objects.get(usuario=username)
+                if check_password(password, usuario_modelo.contrasena):
+                  # USUARIO AUTENTICADO CON EXITO USANDO EL MODELO CUSTOM
+                  # CREAR UN USUARIO EN DJANGO AUTH
                   return render(request, 'login.html', {'error': 'No tienes permisos para ingresar'})
-           except Usuario.DoesNotExist:
-               pass
-           return render(request, 'login.html', {'error': 'Usuario o contraseña incorrecta'})
+                else:
+                   return render(request, 'login.html', {'error': 'Usuario o contraseña incorrecta'})
+            except Usuario.DoesNotExist:
+                return render(request, 'login.html', {'error': 'Usuario o contraseña incorrecta'})
+
     else:
-        return render(request, 'login.html')
+        # **IMPORTANTE:** Pasa la variable 'error' al template en la petición GET
+        return render(request, 'login.html', {'error': error})
 
 
 def logout_view(request):
