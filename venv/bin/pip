@@ -1,4 +1,4 @@
-#!/root/proyectos/GYM/venv/bin/python3
+#!/home/gym/venv/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys
