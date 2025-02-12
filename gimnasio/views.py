@@ -1,4 +1,3 @@
-from venv import logger
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -18,54 +17,50 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.cache import never_cache
 from .models import *
 from .forms import *
-from django.contrib.auth.hashers import check_password
-from django.contrib.auth import get_user_model
-import logging
-#logger = logging.getLogger('gimnasio.views')  # Lo cambiamos, antes era __name__
-
+# Create your views here.
 
 @never_cache
 def login_view(request):
-    logger.debug("Accediendo a la vista de login")
-    logger.debug(f"Método de la solicitud: {request.method}")
-    logger.debug(f"Datos de la solicitud: {request.POST}")
-
+    error = None
     if request.method == 'POST':
-        form = LoginForm(request.POST)
-        if form.is_valid():
-            username = form.cleaned_data['usuario']  # Usuario, no username como le estabamos pidiendo antes
-            password = form.cleaned_data['contrasena']  # Contrasena, no password como le estabamos pidiendo antes
-            logger.debug(f"Intentando autenticar usuario: {username}")
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
 
+        if user is not None:
+            login(request, user)
+            
+            # Obtener el objeto Usuario de tu modelo personalizado
             try:
-                user = Usuario.objects.get(usuario=username) #Obtenemos el modelo, si no existe, tirará la excepción
-                if check_password(password, user.contrasena): #Comparamos la pass con la funcion de django
-                    logger.debug(f"Usuario autenticado: {username}")
-                    login(request, user)  # Autentica al usuario
-                    next_url = request.GET.get('next')
-                    if next_url:
-                        return redirect(next_url)
-                    else:
-                        return redirect('index')
-                else:
-                    logger.debug(f"Fallo la autenticacion para el usuario: {username}")
-                    messages.error(request, 'Usuario o contraseña incorrectos')  # Esto muestra un mensaje en la página
+                usuario_modelo = Usuario.objects.get(usuario=username)
+                # Almacenar el tipo de usuario en la sesión
+                request.session['tipo_usuario'] = usuario_modelo.tipo_usuario.tipousuario
             except Usuario.DoesNotExist:
-                logger.debug(f"Usuario inexistente: {username}")
-                messages.error(request, 'Usuario o contraseña incorrectos')  # Esto muestra un mensaje en la página
+                # Manejar el caso en que el usuario no exista en tu modelo Usuario
+                pass
+            
+             # Obtener el parámetro 'next' de la URL
+            next_url = request.GET.get('next')
+            if next_url:
+                return redirect(next_url)
+            else:
+                return redirect('index')  # Redirige a 'index' si no hay 'next'
         else:
-            logger.debug(f"Formulario Invalido")
-            messages.error(request, 'Por favor, corrija los errores en el formulario.')  # Esto muestra un mensaje en la página
-            # form.add_error(None, "Usuario o contraseña incorrectos") #Esto está mal. Se agrega el error a un campo en especifico.
+           try:
+              usuario_modelo = Usuario.objects.get(usuario=username)
+              if check_password(password,usuario_modelo.contrasena):
+                  return render(request, 'login.html', {'error': 'No tienes permisos para ingresar'})
+           except Usuario.DoesNotExist:
+               pass
+           return render(request, 'login.html', {'error': 'Usuario o contraseña incorrecta'})
     else:
-        form = LoginForm()
-
-    return render(request, 'login.html', {'form': form})
+        return render(request, 'login.html')
 
 
 def logout_view(request):
     logout(request)
     return redirect('login')
+
 
 
 
