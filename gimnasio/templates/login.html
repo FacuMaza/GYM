@@ -1,5 +1,6 @@
 {% load static %}
 {% block content %}
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -16,7 +17,7 @@
             align-items: center;
             justify-content: center;
         }
-        
+
         .overlay {
             position: absolute;
             top: 0;
@@ -43,9 +44,9 @@
         .card {
             background: none;
             border: none;
-            padding: 20px; 
+            padding: 20px;
         }
-        
+
         .card-header{
             background: none;
             border: none;
@@ -58,24 +59,24 @@
             color: #212529;
             font-weight: bold;
         }
-        
+
         .form-control {
             background-color: rgba(255, 255, 255, 0.6);  /* Controles mas transparentes */
             color: #212529;
             border: 1px solid rgba(0,0,0,0.2) /* Bordes mas claros */
         }
-        
+
         .form-control:focus {
             background-color: rgba(255, 255, 255, 0.8);
             border-color: #007bff;
             box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
         }
-        
+
         .btn-primary {
             background-color: #007bff;
             border-color: #007bff;
         }
-        
+
         .btn-primary:hover {
             background-color: #0056b3;
             border-color: #0056b3;
@@ -95,8 +96,12 @@
                 <div class="watermark">
                     <div class="card">
                         <div class="card-body">
-                            {% if error %}
-                                <p class="alert alert-danger">{{ error }}</p>
+                            {% if messages %}
+                                <ul class="messages">
+                                    {% for message in messages %}
+                                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                                    {% endfor %}
+                                </ul>
                             {% endif %}
                             <form method="post">
                                 {% csrf_token %}
