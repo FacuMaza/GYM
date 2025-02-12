@@ -1,3 +1,4 @@
+from venv import logger
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -17,14 +18,10 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.cache import never_cache
 from .models import *
 from .forms import *
+from django.contrib.auth.hashers import check_password
 from django.contrib.auth import get_user_model
 import logging
-# Create your views here.
-
-# Obtén el modelo de usuario personalizado
-UserModel = get_user_model()
-
-logger = logging.getLogger('gimnasio.views')  # Lo cambiamos, antes era __name__
+#logger = logging.getLogger('gimnasio.views')  # Lo cambiamos, antes era __name__
 
 
 @never_cache
@@ -36,16 +33,15 @@ def login_view(request):
     if request.method == 'POST':
         form = LoginForm(request.POST)
         if form.is_valid():
-            username = form.cleaned_data['usuario'] #Usuario, no username como le estabamos pidiendo antes
-            password = form.cleaned_data['contrasena'] #Contrasena, no password como le estabamos pidiendo antes
+            username = form.cleaned_data['usuario']  # Usuario, no username como le estabamos pidiendo antes
+            password = form.cleaned_data['contrasena']  # Contrasena, no password como le estabamos pidiendo antes
             logger.debug(f"Intentando autenticar usuario: {username}")
-            #user = authenticate(request, username=username, password=password) #Sacamos el authenticate porque va a ser por tabla
 
             try:
-                user = UserModel.objects.get(usuario=username)
-                if check_password(password, user.contrasena):
+                user = Usuario.objects.get(usuario=username) #Obtenemos el modelo, si no existe, tirará la excepción
+                if check_password(password, user.contrasena): #Comparamos la pass con la funcion de django
                     logger.debug(f"Usuario autenticado: {username}")
-                    login(request, user, backend='django.contrib.auth.backends.ModelBackend')  # Autentica al usuario
+                    login(request, user)  # Autentica al usuario
                     next_url = request.GET.get('next')
                     if next_url:
                         return redirect(next_url)
@@ -54,7 +50,7 @@ def login_view(request):
                 else:
                     logger.debug(f"Fallo la autenticacion para el usuario: {username}")
                     messages.error(request, 'Usuario o contraseña incorrectos')  # Esto muestra un mensaje en la página
-            except UserModel.DoesNotExist:
+            except Usuario.DoesNotExist:
                 logger.debug(f"Usuario inexistente: {username}")
                 messages.error(request, 'Usuario o contraseña incorrectos')  # Esto muestra un mensaje en la página
         else:
