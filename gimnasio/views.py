@@ -21,49 +21,23 @@ from .forms import *
 
 @never_cache
 def login_view(request):
-    error = None  # Inicializa 'error' con None
+    error = None
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
-
-        # **PRIMERO:** Intenta autenticar con el sistema de autenticación de Django
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
-            login(request, user)  # Inicia sesión con el usuario de Django
-            
-            # Obtener el objeto Usuario de tu modelo personalizado
-            try:
-                usuario_modelo = Usuario.objects.get(usuario=username)
-                # Almacenar el tipo de usuario en la sesión
-                request.session['tipo_usuario'] = usuario_modelo.tipo_usuario.tipousuario
-            except Usuario.DoesNotExist:
-                # Manejar el caso en que el usuario no exista en tu modelo Usuario
-                pass
-            
+            login(request, user)
             # Obtener el parámetro 'next' de la URL
             next_url = request.GET.get('next')
             if next_url:
                 return redirect(next_url)
             else:
-                return redirect('index')  # Redirige a 'index' si no hay 'next'
+                return redirect('index')
         else:
-            # **SEGUNDO:** Si la autenticación estándar falla, intenta autenticar con tu modelo personalizado
-            try:
-                usuario_modelo = Usuario.objects.get(usuario=username)
-                if check_password(password, usuario_modelo.contrasena):
-                  # USUARIO AUTENTICADO CON EXITO USANDO EL MODELO CUSTOM
-                  # CREAR UN USUARIO EN DJANGO AUTH
-                  return render(request, 'login.html', {'error': 'No tienes permisos para ingresar'})
-                else:
-                   return render(request, 'login.html', {'error': 'Usuario o contraseña incorrecta'})
-            except Usuario.DoesNotExist:
-                return render(request, 'login.html', {'error': 'Usuario o contraseña incorrecta'})
-
-    else:
-        # **IMPORTANTE:** Pasa la variable 'error' al template en la petición GET
-        return render(request, 'login.html', {'error': error})
-
+            error = 'Usuario o contraseña incorrecta'
+    return render(request, 'login.html', {'error': error})
 
 def logout_view(request):
     logout(request)
@@ -199,29 +173,18 @@ def usuario_create(request):
     if request.method == 'POST':
         form = UsuarioForm(request.POST)
         if form.is_valid():
-            # Primero crea el usuario en tu modelo Usuario
-            usuario = form.save(commit=False)
-            
-            # Obtener usuario y contraseña del formulario
             username = form.cleaned_data['usuario']
             password = form.cleaned_data['contrasena']
-            
-            # Hashear la contraseña para guardarla en tu modelo Usuario
-            hashed_password = make_password(password)
-            usuario.contrasena = hashed_password
+
+            # Crear el usuario en el sistema de autenticación de Django
+            user = User.objects.create_user(username=username, password=password)
+
+            # Primero crea el usuario en tu modelo Usuario
+            usuario = form.save(commit=False)
+            usuario.contrasena = make_password(password) # Hashear para el modelo Usuario
             usuario.save()
 
-            try:
-              # Verifica si el usuario ya existe en la tabla de autenticacion de Django.
-              django_user = User.objects.get(username=username)
-              # Si existe, actualiza su contraseña.
-              django_user.password = make_password(password)
-              django_user.save()
-            except User.DoesNotExist:
-              # Si no existe, crea el usuario en el sistema de autenticación de Django
-              User.objects.create_user(username=username, password=password)
-            
-            return redirect('usuario_list')  # Redirige a la lista de usuarios
+            return redirect('usuario_list')
     else:
         form = UsuarioForm()
     return render(request, 'usuario_form.html', {'form': form})
@@ -269,20 +232,20 @@ def password_reset_confirm(request, pk):
         new_password = request.POST.get('new_password')
         confirm_password = request.POST.get('confirm_password')
         if new_password != confirm_password:
-             return render(request, 'password_reset_confirm.html', {'error':'Las contraseñas no coinciden', 'pk':pk})
+            return render(request, 'password_reset_confirm.html', {'error': 'Las contraseñas no coinciden', 'pk': pk})
 
+        # Hashear la contraseña
         hashed_password = make_password(new_password)
         usuario.contrasena = hashed_password
         usuario.save()
 
-         #Actualizar la contraseña en el sistema de autenticación de Django
+        # Actualizar la contraseña en el sistema de autenticación de Django
         django_user = User.objects.get(username=usuario.usuario)
         django_user.password = make_password(new_password)
         django_user.save()
 
         return render(request, 'password_reset_complete.html')
-        
-    return render(request, 'password_reset_confirm.html',{'pk':pk})
+    return render(request, 'password_reset_confirm.html', {'pk': pk})
 
 
 ## gym
