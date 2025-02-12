@@ -26,17 +26,38 @@ class TipoUsuarioForm(forms.ModelForm):
             'tipousuario': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import UserCreationForm
 
-
-class UsuarioForm(forms.ModelForm):
+class UsuarioForm(UserCreationForm):
+    tipo_usuario = forms.ModelChoiceField(
+        queryset=TipoUsuario.objects.all(),
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label="Tipo de Usuario"
+    )
     class Meta:
-        model = Usuario
-        fields = ['tipo_usuario', 'usuario', 'contrasena'] # Asegúrate que 'usuario' y 'contrasena' estén incluidos
+        model = User
+        fields = ('username', 'email', 'password', 'tipo_usuario')  # Incluye los campos que quieras del modelo User
         widgets = {
-            'tipo_usuario': forms.Select(attrs={'class': 'form-control'}),
-             'usuario': forms.TextInput(attrs={'class': 'form-control'}),
-            'contrasena': forms.PasswordInput(attrs={'class': 'form-control'}),
+            'password': forms.PasswordInput(attrs={'class': 'form-control'}),  # Asegura que la contraseña sea un campo de contraseña
         }
+
+    def save(self, commit=True):
+        # Guarda el usuario en auth_user
+        user = super().save(commit=False)
+        password = self.cleaned_data['password']
+        user.set_password(password)  # Hashea la contraseña usando el método de Django
+        user.save()
+
+        # Crea el usuario en tu modelo Usuario personalizado
+        tipo_usuario = self.cleaned_data['tipo_usuario']
+        usuario_custom = Usuario.objects.create(
+            tipo_usuario=tipo_usuario,
+            usuario=user.username,
+            contrasena=user.password # El password ya viene hasheado desde UserCreationForm
+        )
+
+        return usuario_custom
 
 
 class LoginForm(forms.Form):
