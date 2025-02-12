@@ -20,16 +20,21 @@ from .forms import *
 import logging
 # Create your views here.
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('gimnasio.views') #Lo cambiamos, antes era __name__
 
 
 @never_cache
 def login_view(request):
+    logger.debug("Accediendo a la vista de login")
+    logger.debug(f"Método de la solicitud: {request.method}")
+    logger.debug(f"Datos de la solicitud: {request.POST}")
+
     if request.method == 'POST':
         form = LoginForm(request.POST)
         if form.is_valid():
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
+            logger.debug(f"Intentando autenticar usuario: {username}")
             user = authenticate(request, username=username, password=password)
 
             if user is not None:
