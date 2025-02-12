@@ -29,6 +29,17 @@ def login_view(request):
 
         if user is not None:
             login(request, user)
+
+            # Establecer el tipo de usuario en la sesión
+            if user.is_superuser:
+                request.session['tipo_usuario'] = 'admin'  # <---- AQUI
+            else:
+                try:
+                    usuario_modelo = Usuario.objects.get(usuario=username)
+                    request.session['tipo_usuario'] = usuario_modelo.tipo_usuario.tipousuario
+                except Usuario.DoesNotExist:
+                    request.session['tipo_usuario'] = 'miembro' #Valor por defecto si no existe en la tabla Usuario
+
             # Obtener el parámetro 'next' de la URL
             next_url = request.GET.get('next')
             if next_url:
@@ -37,7 +48,8 @@ def login_view(request):
                 return redirect('index')
         else:
             error = 'Usuario o contraseña incorrecta'
-    return render(request, 'login.html', {'error': error}) #ESTA ES LA LINEA IMPORTANTE
+    return render(request, 'login.html', {'error': error})
+
 
 def logout_view(request):
     logout(request)
@@ -52,7 +64,7 @@ def index(request):
     tipo_usuario = None
 
     if request.user.is_superuser:
-        tipo_usuario = 'admin'  # Priorizar superusuario
+        tipo_usuario = 'admin'
     elif request.user.groups.filter(name='empleado').exists():
         tipo_usuario = 'empleado'
     else:
@@ -62,6 +74,8 @@ def index(request):
             tipo_usuario = usuario_obj.tipo_usuario
         except Usuario.DoesNotExist:
             tipo_usuario = 'miembro'
+    #ESTABLECER LA VARIABLE DE SESSION, AHORA ES EL LUGAR CORRECTO
+    request.session['tipo_usuario'] = tipo_usuario
 
     # Obtener los últimos socios, cuotas y ventas
     ultimos_socios = Socio.objects.order_by('-id')[:2]
