@@ -48,23 +48,28 @@ def logout_view(request):
 
 @login_required
 def index(request):
-    usuario_obj = Usuario.objects.get(usuario=request.user.username)
-    tipo_usuario = usuario_obj.tipo_usuario
+    usuario = request.user.username  # Obtén el nombre de usuario del usuario autenticado
+    tipo_usuario = None  # Inicializa tipo_usuario
 
-    if request.user.is_authenticated:
-        usuario = request.user.username
-        if request.user.is_superuser:
-            tipo_usuario = 'admin'
-        elif request.user.groups.filter(name='empleado').exists():
-            tipo_usuario = 'empleado'
+    if request.user.is_superuser:
+        tipo_usuario = 'admin'
+    elif request.user.groups.filter(name='empleado').exists():
+        tipo_usuario = 'empleado'
+    else:
+        # Intenta obtener el tipo de usuario de tu modelo Usuario
+        try:
+            usuario_obj = Usuario.objects.get(usuario=request.user.username)
+            tipo_usuario = usuario_obj.tipo_usuario
+        except Usuario.DoesNotExist:
+            # Manejar el caso en que el usuario no exista en tu modelo Usuario
+            tipo_usuario = 'miembro'  # Asigna un tipo de usuario por defecto
+            # o puedes mostrar un mensaje de error en el template
+            # return render(request, 'index.html', {'error': 'No se encontró tu perfil. Contacta al administrador.'})
 
-    # Obtener los últimos 5 socios agregados, por ejemplo
+
+    # Obtener los últimos socios, cuotas y ventas
     ultimos_socios = Socio.objects.order_by('-id')[:2]
-
-    # Obtener las últimas 5 cuotas agregadas
     ultimas_cuotas = Cuota.objects.order_by('-id')[:2]
-
-    # Obtener las últimas 5 ventas agregadas
     ultimas_ventas = Venta.objects.order_by('-id')[:2]
 
     return render(request, 'index.html', {
