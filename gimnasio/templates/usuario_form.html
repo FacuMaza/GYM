@@ -5,15 +5,14 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Lista de Tipos de Usuario</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <title>Formulario de Usuario</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
     <h1>Formulario de Usuario</h1>
     <form method="post">
         {% csrf_token %}
-        {{ form.as_p }}
+        {{ form.as_p }}  {# Esto renderiza todos los campos del formulario #}
         <button type="submit">Guardar</button>
     </form>
 </body>

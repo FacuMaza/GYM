@@ -29,32 +29,45 @@ class TipoUsuarioForm(forms.ModelForm):
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 
-class UsuarioForm(UserCreationForm):
+class UsuarioForm(forms.Form):
+    username = forms.CharField(
+        max_length=150,
+        label="Nombre de usuario",
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    email = forms.EmailField(
+        label="Correo electrónico",
+        widget=forms.EmailInput(attrs={'class': 'form-control'}),
+        required=False # O True, dependiendo de si quieres que el email sea obligatorio
+    )
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        label="Contraseña"
+    )
     tipo_usuario = forms.ModelChoiceField(
         queryset=TipoUsuario.objects.all(),
         widget=forms.Select(attrs={'class': 'form-control'}),
         label="Tipo de Usuario"
     )
-    class Meta:
-        model = User
-        fields = ('username', 'email', 'password', 'tipo_usuario')  # Incluye los campos que quieras del modelo User
-        widgets = {
-            'password': forms.PasswordInput(attrs={'class': 'form-control'}),  # Asegura que la contraseña sea un campo de contraseña
-        }
 
     def save(self, commit=True):
-        # Guarda el usuario en auth_user
-        user = super().save(commit=False)
+        username = self.cleaned_data['username']
+        email = self.cleaned_data['email']
         password = self.cleaned_data['password']
-        user.set_password(password)  # Hashea la contraseña usando el método de Django
-        user.save()
+        tipo_usuario = self.cleaned_data['tipo_usuario']
+
+        # Crear el usuario en auth_user
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password
+        )
 
         # Crea el usuario en tu modelo Usuario personalizado
-        tipo_usuario = self.cleaned_data['tipo_usuario']
         usuario_custom = Usuario.objects.create(
             tipo_usuario=tipo_usuario,
-            usuario=user.username,
-            contrasena=user.password # El password ya viene hasheado desde UserCreationForm
+            usuario=username,
+            contrasena=user.password  # El password ya viene hasheado
         )
 
         return usuario_custom

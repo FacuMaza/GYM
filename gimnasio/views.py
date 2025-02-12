@@ -61,21 +61,22 @@ def logout_view(request):
 @login_required
 def index(request):
     usuario = request.user.username
-    tipo_usuario = None
+    tipo_usuario_valor = None # Inicializar la variable
 
     if request.user.is_superuser:
-        tipo_usuario = 'admin'
+        tipo_usuario_valor = 'admin'
     elif request.user.groups.filter(name='empleado').exists():
-        tipo_usuario = 'empleado'
+        tipo_usuario_valor = 'empleado'
     else:
         # Intenta obtener el tipo de usuario de tu modelo Usuario
         try:
             usuario_obj = Usuario.objects.get(usuario=request.user.username)
-            tipo_usuario = usuario_obj.tipo_usuario
+            tipo_usuario_valor = usuario_obj.tipo_usuario.tipousuario  # Obtén el valor del campo tipousuario
         except Usuario.DoesNotExist:
-            tipo_usuario = 'miembro'
-    #ESTABLECER LA VARIABLE DE SESSION, AHORA ES EL LUGAR CORRECTO
-    request.session['tipo_usuario'] = tipo_usuario
+            tipo_usuario_valor = 'miembro'
+
+    # ESTABLECER LA VARIABLE DE SESSION, AHORA ES EL LUGAR CORRECTO
+    request.session['tipo_usuario'] = tipo_usuario_valor
 
     # Obtener los últimos socios, cuotas y ventas
     ultimos_socios = Socio.objects.order_by('-id')[:2]
@@ -84,7 +85,7 @@ def index(request):
 
     return render(request, 'index.html', {
         'usuario': usuario,
-        'tipo_usuario': tipo_usuario,
+        'tipo_usuario': tipo_usuario_valor,
         'ultimos_socios': ultimos_socios,
         'ultimas_cuotas': ultimas_cuotas,
         'ultimas_ventas': ultimas_ventas
@@ -188,17 +189,7 @@ def usuario_create(request):
     if request.method == 'POST':
         form = UsuarioForm(request.POST)
         if form.is_valid():
-            username = form.cleaned_data['usuario']
-            password = form.cleaned_data['contrasena']
-
-            # Crear el usuario en el sistema de autenticación de Django
-            user = User.objects.create_user(username=username, password=password)
-
-            # Primero crea el usuario en tu modelo Usuario
-            usuario = form.save(commit=False)
-            usuario.contrasena = make_password(password) # Hashear para el modelo Usuario
-            usuario.save()
-
+            form.save() #Formulario seguro
             return redirect('usuario_list')
     else:
         form = UsuarioForm()
@@ -222,9 +213,25 @@ def usuario_update(request, pk):
 
 def usuario_delete(request, pk):
     usuario = get_object_or_404(Usuario, pk=pk)
+    try:
+        user = User.objects.get(username=usuario.usuario)
+    except User.DoesNotExist:
+        # Log the error or handle the case where the User doesn't exist.
+        print(f"Warning: User with username '{usuario.usuario}' not found in auth_user.")
+        user = None
+
     if request.method == 'POST':
+        # Delete the Usuario first
+        username = usuario.usuario  # Store username before deleting
         usuario.delete()
+
+        # Then delete the corresponding User if it exists and if not, this does not generate error
+        if user:
+            user.delete()
+            print(f"User with username '{username}' deleted successfully from auth_user.")
+
         return redirect('usuario_list')
+
     return render(request, 'usuario_confirm_delete.html', {'usuario': usuario})
 
 
