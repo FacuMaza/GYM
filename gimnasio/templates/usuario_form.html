@@ -2,19 +2,41 @@
 {% load static %}
 {% block content %}
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <title>Formulario de Usuario</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+      .center-container {
+         display: flex;
+         justify-content: center;
+         align-items: flex-start;
+         min-height: 60vh;
+          padding-top: 10vh;
+      }
+      .button-container {
+        display: flex;
+        justify-content: center; /* Centra los botones horizontalmente */
+        margin-top: 1rem; /* Añade un espacio arriba de los botones */
+    }
+    </style>
 </head>
 <body>
-    <h1>Formulario de Usuario</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}  {# Esto renderiza todos los campos del formulario #}
-        <button type="submit">Guardar</button>
-    </form>
+    <div class="center-container">
+        <div class="card" style="width: 60%; max-width: 600px;">
+            <div class="card-body">
+                <h2 class="card-title">Formulario de Usuario</h2>
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form.as_p }}  {# Esto renderiza todos los campos del formulario #}
+                    <div class="button-container">
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
 {% endblock %}

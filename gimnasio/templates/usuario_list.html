@@ -1,27 +1,60 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 {% load static %}
 {% block content %}
 
 <!DOCTYPE html>
 <html lang="es">
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <title>Lista de Tipos de Usuario</title>
-    
-    </head>
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Tipos de Usuario</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+      .center-container {
+         display: flex;
+         justify-content: center;
+         align-items: flex-start;
+         min-height: 60vh;
+          padding-top: 10vh;
+      }
+      .button-container {
+        display: flex;
+        justify-content: center; /* Centra los botones horizontalmente */
+        margin-top: 1rem; /* Añade un espacio arriba de los botones */
+    }
+    </style>
+</head>
 <body>
-<h1>Lista de Usuarios</h1>
-<a href="{% url 'usuario_create' %}">Crear Usuario</a>
-<ul>
-    {% for usuario in usuarios %}
-        <li>
-            {{ usuario.usuario }} ({{ usuario.tipo_usuario }})
-            <a href="{% url 'usuario_update' pk=usuario.pk %}">Editar</a>
-            <a href="{% url 'usuario_delete' pk=usuario.pk %}">Eliminar</a>
-        </li>
-    {% endfor %}
-</ul>
+    <div class="center-container">
+        <div class="card" style="width: 80%; max-width: 1000px;">
+            <div class="card-body">
+                <h2 class="card-title">Lista de Usuarios</h2>
+                <div class="button-container">
+                    <a href="{% url 'usuario_create' %}" class="btn btn-success">Crear Usuario</a>
+                </div>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Tipo de Usuario</th>
+                           
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for usuario in usuarios %}
+                        <tr>
+                            <td>{{ usuario.usuario }}</td>
+                            <td>{{ usuario.tipo_usuario }}</td>
+                            <td>
+                                <a href="{% url 'usuario_update' pk=usuario.pk %}" class="btn btn-primary btn-sm">Editar</a>
+                                <a href="{% url 'usuario_delete' pk=usuario.pk %}" class="btn btn-danger btn-sm">Eliminar</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
 {% endblock %}
